@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useGame } from './useGame';
 import { Cell } from './Cell';
 import { getPinyin } from './pinyin';
+import Toast from './Toast';
 
 const WORD_LENGTH = 4;
 const MAX_ATTEMPTS = 10;
@@ -24,6 +25,9 @@ function App() {
   const [showSadAnimation, setShowSadAnimation] = useState(false);
   const [showGuessAnimation, setShowGuessAnimation] = useState(false);
   const [guessAnimationRow, setGuessAnimationRow] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'error' | 'warning' } | null>(null);
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [isInputComposing, setIsInputComposing] = useState(false);
 
   const changeWord = () => {
     changeWordGame();
@@ -33,6 +37,87 @@ function App() {
     setShowSadAnimation(false);
     setShowGuessAnimation(false);
   };
+
+  // 英文检测函数
+  const detectEnglish = (text: string): boolean => {
+    // 检测是否包含英文字母
+    return /[a-zA-Z]/.test(text);
+  };
+
+  // 格式验证函数
+  const validateInput = (text: string): { isValid: boolean; errorMessage?: string } => {
+    // 检测英文
+    if (detectEnglish(text)) {
+      return {
+        isValid: false,
+        errorMessage: '请使用中文输入，不要包含英文字符',
+      };
+    }
+
+    // 检测空格
+    if (text.includes(' ')) {
+      return {
+        isValid: false,
+        errorMessage: '请不要输入空格',
+      };
+    }
+
+    // 检测特殊字符
+    if (/[^\u4e00-\u9fa5]/.test(text)) {
+      return {
+        isValid: false,
+        errorMessage: '请只输入汉字',
+      };
+    }
+
+    // 检测长度
+    if (text.length > WORD_LENGTH) {
+      return {
+        isValid: false,
+        errorMessage: `请输入${WORD_LENGTH}个汉字`,
+      };
+    }
+
+    return { isValid: true };
+  };
+
+  // 显示toast提示
+  const showToast = (message: string, type: 'error' | 'warning') => {
+    setToast({ message, type });
+  };
+
+  // 处理输入变化
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCurrentInput(value);
+
+    // 跳过输入法组合输入状态
+    if (isInputComposing) return;
+
+    // 清除之前的防抖定时器
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+
+    // 设置新的防抖定时器
+    const timer = setTimeout(() => {
+      const validation = validateInput(value);
+      if (!validation.isValid) {
+        showToast(validation.errorMessage!, 'error');
+      }
+    }, 300);
+
+    setDebounceTimer(timer);
+  };
+
+  // 清理防抖定时器
+  useEffect(() => {
+    return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+    };
+  }, [debounceTimer]);
 
   // 处理"再玩一次"按钮点击
   const handlePlayAgain = () => {
@@ -72,23 +157,31 @@ function App() {
 
   // 处理猜测提交
   const handleGuessSubmit = () => {
-    if (gameState === 'playing' && currentInput.length === WORD_LENGTH) {
-      // 触发猜测动画
-      setShowGuessAnimation(true);
-      setGuessAnimationRow(grid.length - 1);
-      playSound('guess');
+    if (gameState === 'playing') {
+      if (currentInput.length < WORD_LENGTH) {
+        // 输入长度不足，显示toast提示
+        showToast(`请输入${WORD_LENGTH}个汉字`, 'error');
+        return;
+      }
       
-      // 执行猜测
-      handleSubmit();
-      
-      // 300ms后关闭猜测动画
-      setTimeout(() => {
-        setShowGuessAnimation(false);
-        setGuessAnimationRow(null);
-      }, 300);
-    } else {
-      // 直接执行猜测（不需要动画）
-      handleSubmit();
+      if (currentInput.length === WORD_LENGTH) {
+        // 触发猜测动画
+        setShowGuessAnimation(true);
+        setGuessAnimationRow(grid.length - 1);
+        playSound('guess');
+        
+        // 执行猜测
+        handleSubmit();
+        
+        // 300ms后关闭猜测动画
+        setTimeout(() => {
+          setShowGuessAnimation(false);
+          setGuessAnimationRow(null);
+        }, 300);
+      } else {
+        // 直接执行猜测（不需要动画）
+        handleSubmit();
+      }
     }
   };
 
@@ -254,7 +347,16 @@ function App() {
           maxLength={WORD_LENGTH}
           value={currentInput}
           disabled={gameState !== 'playing'}
-          onChange={(e) => setCurrentInput(e.target.value)}
+          onChange={handleInputChange}
+          onCompositionStart={() => setIsInputComposing(true)}
+          onCompositionEnd={() => {
+            setIsInputComposing(false);
+            // 组合输入结束后再进行验证
+            const validation = validateInput(currentInput);
+            if (!validation.isValid) {
+              showToast(validation.errorMessage!, 'error');
+            }
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               handleGuessSubmit();
@@ -579,6 +681,15 @@ function App() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Toast 提示 */}
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
         )}
       </main>
     </div>
