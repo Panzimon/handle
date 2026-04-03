@@ -1,0 +1,148 @@
+.cell {
+  width: 80px;
+  height: 80px;
+  border: 2px solid #d3d6da;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  transition: all 0.3s ease;
+  position: relative;
+  color: #1a1a1b;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.cell.correct {
+  background-color: #6aaa64;
+  color: white;
+}
+
+.cell.correct .pinyin-part {
+  color: white;
+}
+
+.cell.present {
+  background-color: #c9b458;
+  color: white;
+}
+
+.cell.present .pinyin-part {
+  color: white;
+}
+
+.cell.absent {
+  background-color: #787c7e;
+  color: white;
+}
+
+.cell.empty {
+  background-color: white;
+  border-color: #d3d6da;
+}
+
+.cell.active {
+  border-color: #878a8c;
+  box-shadow: 0 0 0 2px #878a8c;
+}
+
+.cell.active {
+  border-color: #878a8c;
+  box-shadow: 0 0 0 2px #878a8c;
+}
+
+.char {
+  font-size: 32px;
+  font-weight: bold;
+  line-height: 1;
+  color: inherit;
+}
+
+.pinyin {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: bold;
+  color: inherit;
+  margin-bottom: 8px;
+  z-index: 1;
+}
+
+.pinyin-part {
+  font-size: 12px;
+  position: relative;
+  font-weight: bold;
+  display: inline-block;
+  z-index: 1;
+}
+
+.pinyin-part.empty {
+  color: #333333;
+}
+
+.pinyin-part.correct {
+  color: #6aaa64;
+}
+
+.pinyin-part.present {
+  color: #c9b458;
+}
+
+.pinyin-part.absent {
+  color: white;
+}
+
+.pinyin-part.tone {
+  font-size: 12px;
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-weight: bold;
+  display: inline-block;
+  line-height: 1;
+}
+
+.full-pinyin {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: bold;
+}
+
+/* 动画效果 */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.cell.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes flip {
+  0% { transform: rotateX(0); }
+  50% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0); }
+}
+
+.cell.flip {
+  animation: flip 0.5s ease-in-out;
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.cell.pop {
+  animation: pop 0.1s ease-in-out;
+}
