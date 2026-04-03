@@ -8,7 +8,7 @@ interface CellProps {
 }
 
 export function Cell({ data, isActive = false, showPinyin = true }: CellProps) {
-  const { char, pinyin, charState, initialState, finalState, toneState } = data;
+  const { char, pinyin, charState, initialState, finalState } = data;
 
   const getStateClass = (state: string) => {
     switch (state) {
