@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGame } from './useGame';
 import { Cell } from './Cell';
 import { getPinyin } from './pinyin';
@@ -19,11 +19,64 @@ function App() {
     initGame: resetGame,
   } = useGame();
 
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showSadAnimation, setShowSadAnimation] = useState(false);
+
   const initGame = () => {
     resetGame();
     setCurrentHint(null);
     setHintGenerated(false);
+    setShowConfetti(false);
+    setShowSadAnimation(false);
   };
+
+  // 播放音效
+  const playSound = (type: 'win' | 'lose') => {
+    try {
+      const audio = new Audio();
+      if (type === 'win') {
+        // 成功音效 - 使用CDN
+        audio.src = 'https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3';
+      } else {
+        // 失败音效 - 使用CDN
+        audio.src = 'https://assets.mixkit.co/sfx/preview/mixkit-sad-game-over-trombone-471.mp3';
+      }
+      audio.volume = 0.5;
+      audio.play().catch(err => console.log('Audio play error:', err));
+    } catch (error) {
+      console.log('Error playing sound:', error);
+    }
+  };
+
+  // 监听游戏结束状态
+  useEffect(() => {
+    if (gameState === 'won' || gameState === 'lost') {
+      let timeoutId: NodeJS.Timeout;
+      
+      if (gameState === 'won') {
+        setShowConfetti(true);
+        playSound('win');
+        // 5秒后自动关闭庆祝动画
+        timeoutId = setTimeout(() => {
+          setShowConfetti(false);
+        }, 5000);
+      } else {
+        setShowSadAnimation(true);
+        playSound('lose');
+        // 3秒后自动关闭失败动画
+        timeoutId = setTimeout(() => {
+          setShowSadAnimation(false);
+        }, 3000);
+      }
+      
+      // 清理函数
+      return () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      };
+    }
+  }, [gameState]);
 
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -216,10 +269,42 @@ function App() {
           </div>
         )}
 
+        {/* 成功动画 */}
+        {showConfetti && (
+          <div className="fixed inset-0 pointer-events-none z-50">
+            {Array.from({ length: 100 }).map((_, i) => (
+              <div
+                key={i}
+                className="absolute rounded-full animate-fall"
+                style={{
+                  width: `${Math.random() * 10 + 5}px`,
+                  height: `${Math.random() * 10 + 5}px`,
+                  backgroundColor: [
+                    '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA69E', '#98D4BB',
+                    '#F7DC6F', '#BB8FCE', '#85C1E9', '#F8C471', '#82E0AA'
+                  ][Math.floor(Math.random() * 10)],
+                  left: `${Math.random() * 100}%`,
+                  top: '-20px',
+                  animationDuration: `${Math.random() * 3 + 2}s`,
+                  animationDelay: `${Math.random() * 2}s`,
+                  animationTimingFunction: 'ease-in-out',
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* 失败动画 */}
+        {showSadAnimation && (
+          <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
+            <div className="text-6xl text-gray-400 animate-pulse">😞</div>
+          </div>
+        )}
+
         {gameState !== 'playing' && (
           <button 
             onClick={initGame}
-            className="px-6 sm:px-8 py-2.5 sm:py-3 bg-primary text-white rounded-lg font-semibold hover:bg-green-600 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
+            className="px-6 sm:px-8 py-2.5 sm:py-3 bg-primary text-white rounded-lg font-semibold hover:bg-green-600 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-md hover:shadow-lg text-sm sm:text-base relative z-10"
           >
             再玩一次
           </button>
@@ -259,7 +344,7 @@ function App() {
                       {['班', '门', '弄', '斧'].map((char, i) => (
                         <div key={i} className="w-12 h-12 sm:w-14 sm:h-14 bg-primary rounded-lg flex flex-col items-center justify-center text-white font-bold shadow-md">
                           <span className="text-base sm:text-lg">{char}</span>
-                          <span className="text-[10px] sm:text-xs mt-0.5">{['ban', 'men', 'nong', 'fu'][i]}</span>
+                          <span className="text-[10px] sm:text-xs mt-0.5 text-white font-bold">{['bān', 'mén', 'nòng', 'fǔ'][i]}</span>
                         </div>
                       ))}
                     </div>
@@ -271,7 +356,7 @@ function App() {
                       {['水', '落', '石', '出'].map((char, i) => (
                         <div key={i} className={`w-12 h-12 sm:w-14 sm:h-14 ${i === 0 ? 'bg-secondary' : 'bg-neutral'} rounded-lg flex flex-col items-center justify-center text-white font-bold shadow-md`}>
                           <span className="text-base sm:text-lg">{char}</span>
-                          <span className="text-[10px] sm:text-xs mt-0.5">{['shui', 'luo', 'shi', 'chu'][i]}</span>
+                          <span className="text-[10px] sm:text-xs mt-0.5 text-white font-bold">{['shuǐ', 'luò', 'shí', 'chū'][i]}</span>
                         </div>
                       ))}
                     </div>
@@ -283,7 +368,7 @@ function App() {
                       {['巧', '夺', '天', '工'].map((char, i) => (
                         <div key={i} className="w-12 h-12 sm:w-14 sm:h-14 bg-neutral rounded-lg flex flex-col items-center justify-center text-white font-bold shadow-md">
                           <span className="text-base sm:text-lg">{char}</span>
-                          <span className="text-[10px] sm:text-xs mt-0.5">{['qiao', 'duo', 'tian', 'gong'][i]}</span>
+                          <span className="text-[10px] sm:text-xs mt-0.5 text-white font-bold">{['qiǎo', 'duó', 'tiān', 'gōng'][i]}</span>
                         </div>
                       ))}
                     </div>
@@ -297,7 +382,7 @@ function App() {
                       {['武', '运', '昌', '隆'].map((char, i) => (
                         <div key={i} className="w-12 h-12 sm:w-14 sm:h-14 bg-primary rounded-lg flex flex-col items-center justify-center text-white font-bold shadow-md">
                           <span className="text-base sm:text-lg">{char}</span>
-                          <span className="text-[10px] sm:text-xs mt-0.5">{['wu', 'yun', 'chang', 'long'][i]}</span>
+                          <span className="text-[10px] sm:text-xs mt-0.5 text-white font-bold">{['wǔ', 'yùn', 'chāng', 'lóng'][i]}</span>
                         </div>
                       ))}
                     </div>
