@@ -16,35 +16,79 @@ function App() {
     shakeRow,
     answer,
     handleSubmit,
-    initGame: resetGame,
+    playAgain,
+    changeWord: changeWordGame,
   } = useGame();
 
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSadAnimation, setShowSadAnimation] = useState(false);
+  const [showGuessAnimation, setShowGuessAnimation] = useState(false);
+  const [guessAnimationRow, setGuessAnimationRow] = useState<number | null>(null);
 
-  const initGame = () => {
-    resetGame();
+  const changeWord = () => {
+    changeWordGame();
     setCurrentHint(null);
     setHintGenerated(false);
     setShowConfetti(false);
     setShowSadAnimation(false);
+    setShowGuessAnimation(false);
+  };
+
+  // 处理"再玩一次"按钮点击
+  const handlePlayAgain = () => {
+    // 先重置所有动画状态
+    setShowConfetti(false);
+    setShowSadAnimation(false);
+    setShowGuessAnimation(false);
+    setCurrentHint(null);
+    setHintGenerated(false);
+    
+    // 添加小延迟确保动画状态完全重置后再重置游戏状态
+    setTimeout(() => {
+      playAgain();
+    }, 50);
   };
 
   // 播放音效
-  const playSound = (type: 'win' | 'lose') => {
+  const playSound = (type: 'win' | 'lose' | 'guess') => {
     try {
       const audio = new Audio();
       if (type === 'win') {
         // 成功音效 - 使用CDN
         audio.src = 'https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3';
-      } else {
+      } else if (type === 'lose') {
         // 失败音效 - 使用CDN
         audio.src = 'https://assets.mixkit.co/sfx/preview/mixkit-sad-game-over-trombone-471.mp3';
+      } else {
+        // 猜测音效 - 使用CDN
+        audio.src = 'https://assets.mixkit.co/sfx/preview/mixkit-quick-win-video-game-notification-269.mp3';
       }
       audio.volume = 0.5;
       audio.play().catch(err => console.log('Audio play error:', err));
     } catch (error) {
       console.log('Error playing sound:', error);
+    }
+  };
+
+  // 处理猜测提交
+  const handleGuessSubmit = () => {
+    if (gameState === 'playing' && currentInput.length === WORD_LENGTH) {
+      // 触发猜测动画
+      setShowGuessAnimation(true);
+      setGuessAnimationRow(grid.length - 1);
+      playSound('guess');
+      
+      // 执行猜测
+      handleSubmit();
+      
+      // 300ms后关闭猜测动画
+      setTimeout(() => {
+        setShowGuessAnimation(false);
+        setGuessAnimationRow(null);
+      }, 300);
+    } else {
+      // 直接执行猜测（不需要动画）
+      handleSubmit();
     }
   };
 
@@ -54,19 +98,29 @@ function App() {
       let timeoutId: NodeJS.Timeout;
       
       if (gameState === 'won') {
-        setShowConfetti(true);
-        playSound('win');
+        // 确保动画状态重置
+        setShowConfetti(false);
+        // 立即显示庆祝动画
+        setTimeout(() => {
+          setShowConfetti(true);
+          playSound('win');
+        }, 100);
         // 5秒后自动关闭庆祝动画
         timeoutId = setTimeout(() => {
           setShowConfetti(false);
-        }, 5000);
+        }, 5100);
       } else {
-        setShowSadAnimation(true);
-        playSound('lose');
+        // 确保动画状态重置
+        setShowSadAnimation(false);
+        // 立即显示失败动画
+        setTimeout(() => {
+          setShowSadAnimation(true);
+          playSound('lose');
+        }, 100);
         // 3秒后自动关闭失败动画
         timeoutId = setTimeout(() => {
           setShowSadAnimation(false);
-        }, 3000);
+        }, 3100);
       }
       
       // 清理函数
@@ -203,7 +257,7 @@ function App() {
           onChange={(e) => setCurrentInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
-              handleSubmit();
+              handleGuessSubmit();
               e.preventDefault();
             }
           }}
@@ -219,7 +273,7 @@ function App() {
             <div className="flex-shrink-0">
               <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary rounded-lg flex flex-col items-center justify-center text-white font-bold shadow-md">
                 <span className="text-base sm:text-lg">班</span>
-                <span className="text-[10px] sm:text-xs mt-0.5">bān</span>
+                <span className="text-[10px] sm:text-xs mt-0.5 text-white font-bold">bān</span>
               </div>
             </div>
             <p className="text-xs sm:text-sm text-gray-700">
@@ -230,7 +284,7 @@ function App() {
             <div className="flex-shrink-0">
               <div className="w-12 h-12 sm:w-14 sm:h-14 bg-secondary rounded-lg flex flex-col items-center justify-center text-white font-bold shadow-md">
                 <span className="text-base sm:text-lg">水</span>
-                <span className="text-[10px] sm:text-xs mt-0.5">shuǐ</span>
+                <span className="text-[10px] sm:text-xs mt-0.5 text-white font-bold">shuǐ</span>
               </div>
             </div>
             <p className="text-xs sm:text-sm text-gray-700">
@@ -241,7 +295,7 @@ function App() {
             <div className="flex-shrink-0">
               <div className="w-12 h-12 sm:w-14 sm:h-14 bg-neutral rounded-lg flex flex-col items-center justify-center text-white font-bold shadow-md">
                 <span className="text-base sm:text-lg">天</span>
-                <span className="text-[10px] sm:text-xs mt-0.5">tiān</span>
+                <span className="text-[10px] sm:text-xs mt-0.5 text-white font-bold">tiān</span>
               </div>
             </div>
             <p className="text-xs sm:text-sm text-gray-700">
@@ -254,7 +308,7 @@ function App() {
           {grid.map((row, rowIndex) => (
             <div
               key={rowIndex}
-              className={`flex justify-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2 ${shakeRow === rowIndex ? 'animate-shake' : ''}`}
+              className={`flex justify-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2 ${shakeRow === rowIndex ? 'animate-shake' : ''} ${guessAnimationRow === rowIndex && showGuessAnimation ? 'animate-guess' : ''}`}
             >
               {row.map((cell, cellIndex) => (
                 <Cell key={cellIndex} data={cell} />
@@ -302,12 +356,20 @@ function App() {
         )}
 
         {gameState !== 'playing' && (
-          <button 
-            onClick={initGame}
-            className="px-6 sm:px-8 py-2.5 sm:py-3 bg-primary text-white rounded-lg font-semibold hover:bg-green-600 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-md hover:shadow-lg text-sm sm:text-base relative z-10"
-          >
-            再玩一次
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center relative z-10">
+            <button 
+              onClick={handlePlayAgain}
+              className="px-6 sm:px-8 py-2.5 sm:py-3 bg-primary text-white rounded-lg font-semibold hover:bg-green-600 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
+            >
+              再玩一次
+            </button>
+            <button 
+              onClick={changeWord}
+              className="px-6 sm:px-8 py-2.5 sm:py-3 bg-secondary text-white rounded-lg font-semibold hover:bg-amber-600 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
+            >
+              换一个词
+            </button>
+          </div>
         )}
 
         <footer className="mt-auto py-4 sm:py-5 text-center text-gray-500 text-xs sm:text-sm">

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { CellData, CellState, GameState } from './types';
 import { getPinyin } from './pinyin';
-import { getDailyIdiom, isValidIdiom } from './words';
+import { getDailyIdiom, getRandomIdiom, isValidIdiom } from './words';
 
 const MAX_ATTEMPTS = 10;
 const WORD_LENGTH = 4;
@@ -165,6 +165,28 @@ export function useGame() {
     setShakeRow(null);
   }, []);
 
+  // 再玩一次（使用当前成语）
+  const playAgain = useCallback(() => {
+    // 直接重置游戏状态，使用当前的answer
+    setGrid([createEmptyRow()]);
+    setCurrentInput('');
+    setGameState('playing');
+    setMessage('');
+    setShakeRow(null);
+  }, []);
+
+  // 换一个词（随机获取新词）
+  const changeWord = useCallback(() => {
+    const randomIdiom = getRandomIdiom();
+    setAnswer(randomIdiom);
+    // 重置游戏状态
+    setGrid([createEmptyRow()]);
+    setCurrentInput('');
+    setGameState('playing');
+    setMessage('');
+    setShakeRow(null);
+  }, []);
+
   // 处理输入
   const handleInput = useCallback((char: string) => {
     if (gameState !== 'playing') return;
@@ -236,5 +258,7 @@ export function useGame() {
     handleDelete,
     handleSubmit,
     initGame,
+    playAgain,
+    changeWord,
   };
 }
