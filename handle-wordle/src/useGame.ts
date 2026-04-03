@@ -190,10 +190,13 @@ export function useGame() {
   // 处理输入
   const handleInput = useCallback((char: string) => {
     if (gameState !== 'playing') return;
-    if (currentInput.length < WORD_LENGTH) {
-      setCurrentInput(prev => prev + char);
-    }
-  }, [currentInput.length, gameState]);
+    setCurrentInput(prev => {
+      if (prev.length < WORD_LENGTH) {
+        return prev + char;
+      }
+      return prev;
+    });
+  }, [gameState]);
 
   // 删除字符
   const handleDelete = useCallback(() => {
