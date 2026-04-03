@@ -233,6 +233,265 @@
   text-decoration: underline;
 }
 
+/* 头部按钮 */
+.header-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  justify-content: center;
+}
+
+.header-btn {
+  padding: 6px 16px;
+  background-color: transparent;
+  border: 1px solid #d3d6da;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #585c5e;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-btn:hover {
+  background-color: #f6f7f8;
+  border-color: #878a8c;
+}
+
+/* 模态框样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 12px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content.cheat-sheet {
+  max-width: 480px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #d3d6da;
+}
+
+.modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1b;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #787c7e;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background-color: #f6f7f8;
+  color: #1a1a1b;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-body > p {
+  font-size: 14px;
+  color: #585c5e;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.modal-body strong {
+  color: #1a1a1b;
+}
+
+/* 提示示例样式 */
+.hint-examples {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hint-example {
+  padding: 16px;
+  background-color: #f6f7f8;
+  border-radius: 8px;
+}
+
+.hint-cells {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+
+.hint-cell {
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.hint-cell.correct {
+  background-color: #6aaa64;
+}
+
+.hint-cell.present {
+  background-color: #c9b458;
+}
+
+.hint-cell.absent {
+  background-color: #787c7e;
+}
+
+.hint-char {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.hint-pinyin {
+  font-size: 11px;
+  margin-top: 2px;
+  opacity: 0.95;
+}
+
+.hint-text {
+  font-size: 13px;
+  color: #585c5e;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.hint-text strong {
+  color: #1a1a1b;
+}
+
+.hint-text-sub {
+  font-size: 12px;
+  color: #787c7e;
+  line-height: 1.5;
+  margin-top: 6px;
+  text-align: center;
+}
+
+.hint-footer {
+  text-align: center;
+  font-size: 12px;
+  color: #787c7e;
+  margin-top: 20px;
+  font-style: italic;
+}
+
+/* 速查表样式 */
+.cheat-sheet-section {
+  margin-bottom: 24px;
+}
+
+.cheat-sheet-section:last-child {
+  margin-bottom: 0;
+}
+
+.cheat-sheet-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1b;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pinyin-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pinyin-item {
+  padding: 6px 12px;
+  background-color: #f6f7f8;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #585c5e;
+  font-family: 'Courier New', monospace;
+  transition: all 0.2s ease;
+}
+
+.pinyin-item.correct {
+  background-color: #6aaa64;
+  color: white;
+}
+
+.pinyin-item.present {
+  background-color: #c9b458;
+  color: white;
+}
+
+.tone-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tone-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background-color: #f6f7f8;
+  border-radius: 6px;
+}
+
+.tone-mark {
+  font-size: 24px;
+  color: #1a1a1b;
+  width: 24px;
+  text-align: center;
+}
+
+.tone-name {
+  font-size: 14px;
+  color: #585c5e;
+}
+
 /* 响应式设计 */
 @media (max-width: 600px) {
   .title {

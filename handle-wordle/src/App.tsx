@@ -19,6 +19,34 @@ function App() {
     initGame,
   } = useGame();
 
+  // 提示和速查表模态框状态
+  const [showHint, setShowHint] = useState(false);
+  const [showCheatSheet, setShowCheatSheet] = useState(false);
+
+  // 计算速查表中声母和韵母的状态
+  const getPinyinState = (type: 'initial' | 'final', value: string) => {
+    // 遍历所有已提交的猜测，从最新的开始检查
+    for (let i = grid.length - 1; i >= 0; i--) {
+      const row = grid[i];
+      for (const cell of row) {
+        if (type === 'initial' && cell.pinyin.initial === value) {
+          if (cell.initialState === 'correct') {
+            return 'correct';
+          } else if (cell.initialState === 'present') {
+            return 'present';
+          }
+        } else if (type === 'final' && cell.pinyin.final === value) {
+          if (cell.finalState === 'correct') {
+            return 'correct';
+          } else if (cell.finalState === 'present') {
+            return 'present';
+          }
+        }
+      }
+    }
+    return null;
+  };
+
 
 
   return (
@@ -26,6 +54,10 @@ function App() {
       <header className="header">
         <h1 className="title">汉字 Wordle</h1>
         <p className="subtitle">猜四字成语</p>
+        <div className="header-buttons">
+          <button className="header-btn" onClick={() => setShowHint(true)}>提示</button>
+          <button className="header-btn" onClick={() => setShowCheatSheet(true)}>速查表</button>
+        </div>
       </header>
 
       <main className="game">
@@ -134,6 +166,137 @@ function App() {
             inspired by <a href="https://handle.antfu.me/" target="_blank" rel="noopener noreferrer">Handle</a>
           </p>
         </footer>
+
+        {/* 提示模态框 */}
+        {showHint && (
+          <div className="modal-overlay" onClick={() => setShowHint(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>游戏规则</h2>
+                <button className="modal-close" onClick={() => setShowHint(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <p>你有<strong>十次</strong>的机会猜一个<strong>四字词语</strong>。</p>
+                <p>每次猜测后，汉字与拼音的颜色将会标识其与正确答案的区别。</p>
+                
+                <div className="hint-examples">
+                  <div className="hint-example">
+                    <div className="hint-cells">
+                      <div className="hint-cell correct"><span className="hint-char">班</span><span className="hint-pinyin">ban</span></div>
+                      <div className="hint-cell correct"><span className="hint-char">门</span><span className="hint-pinyin">men</span></div>
+                      <div className="hint-cell correct"><span className="hint-char">弄</span><span className="hint-pinyin">nong</span></div>
+                      <div className="hint-cell correct"><span className="hint-char">斧</span><span className="hint-pinyin">fu</span></div>
+                    </div>
+                    <p className="hint-text">第二个字 <strong>门</strong> 为<strong>青色</strong>，表示其出现在答案中且在正确的位置。</p>
+                  </div>
+
+                  <div className="hint-example">
+                    <div className="hint-cells">
+                      <div className="hint-cell present"><span className="hint-char">水</span><span className="hint-pinyin">shui</span></div>
+                      <div className="hint-cell absent"><span className="hint-char">落</span><span className="hint-pinyin">luo</span></div>
+                      <div className="hint-cell absent"><span className="hint-char">石</span><span className="hint-pinyin">shi</span></div>
+                      <div className="hint-cell absent"><span className="hint-char">出</span><span className="hint-pinyin">chu</span></div>
+                    </div>
+                    <p className="hint-text">第一个字 <strong>水</strong> 为<strong>橙色</strong>，表示其出现在答案中，但并不是第一个字。</p>
+                  </div>
+
+                  <div className="hint-example">
+                    <div className="hint-cells">
+                      <div className="hint-cell absent"><span className="hint-char">巧</span><span className="hint-pinyin">qiao</span></div>
+                      <div className="hint-cell absent"><span className="hint-char">夺</span><span className="hint-pinyin">duo</span></div>
+                      <div className="hint-cell absent"><span className="hint-char">天</span><span className="hint-pinyin">tian</span></div>
+                      <div className="hint-cell absent"><span className="hint-char">工</span><span className="hint-pinyin">gong</span></div>
+                    </div>
+                    <p className="hint-text">每个格子的<strong>汉字、声母、韵母、声调</strong>都会独立进行颜色的指示。</p>
+                    <p className="hint-text-sub">例如，第一个 <strong>巧</strong> 汉字为灰色，而其<strong>声母</strong>与<strong>韵母</strong>均为青色，代表该位置的正确答案为其同音字但非 <strong>巧</strong> 字本身。</p>
+                    <p className="hint-text-sub">同理，第二个字中韵母 <strong>uo</strong> 为橙色，代表其韵母出现在四个字之中，但非位居第二。以此类推。</p>
+                  </div>
+
+                  <div className="hint-example">
+                    <div className="hint-cells">
+                      <div className="hint-cell correct"><span className="hint-char">武</span><span className="hint-pinyin">wu</span></div>
+                      <div className="hint-cell correct"><span className="hint-char">运</span><span className="hint-pinyin">yun</span></div>
+                      <div className="hint-cell correct"><span className="hint-char">昌</span><span className="hint-pinyin">chang</span></div>
+                      <div className="hint-cell correct"><span className="hint-char">隆</span><span className="hint-pinyin">long</span></div>
+                    </div>
+                    <p className="hint-text">当四个格子都为青色时，你便赢得了游戏！</p>
+                  </div>
+                </div>
+
+                <p className="hint-footer">* 新题目每日零时更新</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 速查表模态框 */}
+        {showCheatSheet && (
+          <div className="modal-overlay" onClick={() => setShowCheatSheet(false)}>
+            <div className="modal-content cheat-sheet" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>拼音速查表</h2>
+                <button className="modal-close" onClick={() => setShowCheatSheet(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <div className="cheat-sheet-section">
+                  <h3>声母</h3>
+                  <div className="pinyin-grid">
+                    {['b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h', 'j', 'q', 'x', 'zh', 'ch', 'sh', 'r', 'z', 'c', 's', 'y', 'w'].map((initial) => {
+                      const state = getPinyinState('initial', initial);
+                      return (
+                        <span 
+                          key={initial} 
+                          className={`pinyin-item ${state || ''}`}
+                        >
+                          {initial}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="cheat-sheet-section">
+                  <h3>韵母</h3>
+                  <div className="pinyin-grid">
+                    {['a', 'o', 'e', 'i', 'u', 'ü', 'ai', 'ei', 'ui', 'ao', 'ou', 'iu', 'ie', 'üe', 'er', 'an', 'en', 'in', 'un', 'ün', 'ang', 'eng', 'ing', 'ong'].map((final) => {
+                      const state = getPinyinState('final', final);
+                      return (
+                        <span 
+                          key={final} 
+                          className={`pinyin-item ${state || ''}`}
+                        >
+                          {final}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="cheat-sheet-section">
+                  <h3>声调</h3>
+                  <div className="tone-examples">
+                    <div className="tone-item">
+                      <span className="tone-mark">ˉ</span>
+                      <span className="tone-name">第一声（阴平）</span>
+                    </div>
+                    <div className="tone-item">
+                      <span className="tone-mark">ˊ</span>
+                      <span className="tone-name">第二声（阳平）</span>
+                    </div>
+                    <div className="tone-item">
+                      <span className="tone-mark">ˇ</span>
+                      <span className="tone-name">第三声（上声）</span>
+                    </div>
+                    <div className="tone-item">
+                      <span className="tone-mark">ˋ</span>
+                      <span className="tone-name">第四声（去声）</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
