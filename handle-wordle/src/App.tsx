@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useGame } from './useGame';
 import { Cell } from './Cell';
+import { getPinyin } from './pinyin';
 
 import './App.css';
 
@@ -15,13 +16,26 @@ function App() {
     gameState,
     message,
     shakeRow,
+    answer,
     handleSubmit,
-    initGame,
+    initGame: resetGame,
   } = useGame();
 
+  // 重新开始游戏时重置提示状态
+  const initGame = () => {
+    resetGame();
+    setCurrentHint(null);
+    setHintGenerated(false);
+  };
+
   // 提示和速查表模态框状态
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [showCheatSheet, setShowCheatSheet] = useState(false);
+  // 提示状态
+  const [hintLevel, setHintLevel] = useState(1); // 1: 字音提示, 2: 汉字提示
+  const [currentHint, setCurrentHint] = useState<{ char: string; pinyin: string } | null>(null);
+  const [hintGenerated, setHintGenerated] = useState(false); // 标记是否已经生成过提示
 
   // 计算速查表中声母和韵母的状态
   const getPinyinState = (type: 'initial' | 'final', value: string) => {
@@ -47,6 +61,84 @@ function App() {
     return null;
   };
 
+  // 生成提示信息
+  const generateHint = () => {
+    // 随机选择一个字作为提示
+    const randomIndex = Math.floor(Math.random() * answer.length);
+    const hintChar = answer[randomIndex];
+    const hintPinyin = getPinyin(hintChar);
+    
+    // 构建带声调的拼音
+    const pinyinWithTone = addToneMark(hintPinyin.initial, hintPinyin.final, hintPinyin.tone);
+    
+    const newHint = {
+      char: hintChar,
+      pinyin: pinyinWithTone
+    };
+    
+    setCurrentHint(newHint);
+    return newHint;
+  };
+
+  // 添加声调标记到正确的位置
+  const addToneMark = (initial: string, final: string, tone: number) => {
+    if (tone === 0) {
+      return initial + final;
+    }
+    
+    const toneMarks = ['', 'āáǎà', 'ēéěè', 'īíǐì', 'ōóǒò', 'ūúǔù', 'ǖǘǚǜ'];
+    const vowels = 'aeiouvü';
+    
+    // 找到韵母中的主要元音
+    let mainVowel = '';
+    let vowelIndex = -1;
+    
+    // 优先顺序：a > o > e > i > u > v/ü
+    for (const vowel of vowels) {
+      const index = final.toLowerCase().indexOf(vowel);
+      if (index !== -1) {
+        mainVowel = final[index];
+        vowelIndex = index;
+        break;
+      }
+    }
+    
+    if (vowelIndex === -1) {
+      // 没有找到元音，直接在末尾添加声调
+      return initial + final + toneMarks[0][tone];
+    }
+    
+    // 替换主要元音为带声调的版本
+    let vowelWithTone = '';
+    switch (mainVowel.toLowerCase()) {
+      case 'a':
+        vowelWithTone = toneMarks[1][tone-1];
+        break;
+      case 'e':
+        vowelWithTone = toneMarks[2][tone-1];
+        break;
+      case 'i':
+        vowelWithTone = toneMarks[3][tone-1];
+        break;
+      case 'o':
+        vowelWithTone = toneMarks[4][tone-1];
+        break;
+      case 'u':
+        vowelWithTone = toneMarks[5][tone-1];
+        break;
+      case 'v':
+      case 'ü':
+        vowelWithTone = toneMarks[6][tone-1];
+        break;
+      default:
+        vowelWithTone = mainVowel;
+    }
+    
+    // 构建最终的拼音
+    const newFinal = final.substring(0, vowelIndex) + vowelWithTone + final.substring(vowelIndex + 1);
+    return initial + newFinal;
+  };
+
 
 
   return (
@@ -55,7 +147,15 @@ function App() {
         <h1 className="title">汉字 Wordle</h1>
         <p className="subtitle">猜四字成语</p>
         <div className="header-buttons">
-          <button className="header-btn" onClick={() => setShowHint(true)}>提示</button>
+          <button className="header-btn" onClick={() => setShowHowToPlay(true)}>玩法介绍</button>
+          <button className="header-btn" onClick={() => {
+            if (!hintGenerated) {
+              generateHint();
+              setHintGenerated(true);
+              setHintLevel(1);
+            }
+            setShowHint(true);
+          }}>提示</button>
           <button className="header-btn" onClick={() => setShowCheatSheet(true)}>速查表</button>
         </div>
       </header>
@@ -167,13 +267,13 @@ function App() {
           </p>
         </footer>
 
-        {/* 提示模态框 */}
-        {showHint && (
-          <div className="modal-overlay" onClick={() => setShowHint(false)}>
+        {/* 玩法介绍模态框 */}
+        {showHowToPlay && (
+          <div className="modal-overlay" onClick={() => setShowHowToPlay(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <h2>游戏规则</h2>
-                <button className="modal-close" onClick={() => setShowHint(false)}>×</button>
+                <button className="modal-close" onClick={() => setShowHowToPlay(false)}>×</button>
               </div>
               <div className="modal-body">
                 <p>你有<strong>十次</strong>的机会猜一个<strong>四字词语</strong>。</p>
@@ -224,6 +324,37 @@ function App() {
                 </div>
 
                 <p className="hint-footer">* 新题目每日零时更新</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 提示模态框 */}
+        {showHint && (
+          <div className="modal-overlay" onClick={() => setShowHint(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>游戏提示</h2>
+                <button className="modal-close" onClick={() => setShowHint(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <div className="hint-container">
+                  <h3 className="hint-title">{hintLevel === 1 ? '答案包含以下字音' : '答案包含以下汉字'}</h3>
+                  <div className="hint-box">
+                    <div className="hint-pinyin">{currentHint?.pinyin || ''}</div>
+                    {hintLevel === 2 && (
+                      <div className="hint-char">{currentHint?.char || ''}</div>
+                    )}
+                    {hintLevel === 1 && (
+                      <div className="hint-question">?</div>
+                    )}
+                  </div>
+                  {hintLevel === 1 && (
+                    <button className="hint-button" onClick={() => setHintLevel(2)}>
+                      进一步提示
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
