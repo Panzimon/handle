@@ -3,6 +3,15 @@ import type { PinyinPart } from './types';
 
 // 获取汉字的拼音信息
 export function getPinyin(char: string): PinyinPart {
+  // 检查是否是中文字符
+  if (!/[\u4e00-\u9fa5]/.test(char)) {
+    return {
+      initial: '',
+      final: '',
+      tone: 0,
+    };
+  }
+
   const result = pinyin(char, {
     style: pinyin.STYLE_TONE2,
     heteronym: false,
@@ -51,6 +60,11 @@ export function getPinyin(char: string): PinyinPart {
 
 // 获取完整的拼音字符串
 export function getFullPinyin(char: string): string {
+  // 检查是否是中文字符
+  if (!/[\u4e00-\u9fa5]/.test(char)) {
+    return '';
+  }
+
   const result = pinyin(char, {
     style: pinyin.STYLE_TONE,
     heteronym: false,
@@ -60,8 +74,14 @@ export function getFullPinyin(char: string): string {
 
 // 获取无声调的拼音
 export function getPinyinWithoutTone(char: string): string {
-  return pinyin(char, {
+  // 检查是否是中文字符
+  if (!/[\u4e00-\u9fa5]/.test(char)) {
+    return '';
+  }
+
+  const result = pinyin(char, {
     style: pinyin.STYLE_NORMAL,
     heteronym: false,
-  })[0][0];
+  });
+  return result && result[0] && result[0][0] ? result[0][0] : '';
 }

@@ -116,4 +116,47 @@ describe('Input Validation System', () => {
       expect(screen.getByText('请使用中文输入，不要包含英文字符')).toBeInTheDocument();
     }, { timeout: 500 });
   });
+
+  test('should show error toast for empty input when submitting', () => {
+    render(<App />);
+    
+    const input = screen.getByPlaceholderText('输入四字成语');
+    
+    // 输入空字符串
+    fireEvent.change(input, { target: { value: '' } });
+    
+    // 按 Enter 键提交
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+    
+    // 检查是否显示错误提示
+    expect(screen.getByText('请输入4个汉字')).toBeInTheDocument();
+  });
+
+  test('should show error toast for input length more than 4', async () => {
+    render(<App />);
+    
+    const input = screen.getByPlaceholderText('输入四字成语');
+    
+    // 输入超过4个汉字
+    fireEvent.change(input, { target: { value: '测试测试测试' } });
+    
+    // 等待防抖
+    await waitFor(() => {
+      expect(screen.getByText('请输入4个汉字')).toBeInTheDocument();
+    }, { timeout: 500 });
+  });
+
+  test('should show error toast for input with mixed Chinese and English', async () => {
+    render(<App />);
+    
+    const input = screen.getByPlaceholderText('输入四字成语');
+    
+    // 输入中英文混合
+    fireEvent.change(input, { target: { value: '测试test' } });
+    
+    // 等待防抖
+    await waitFor(() => {
+      expect(screen.getByText('请使用中文输入，不要包含英文字符')).toBeInTheDocument();
+    }, { timeout: 500 });
+  });
 });
