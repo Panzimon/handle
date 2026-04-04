@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 interface ToastProps {
   message: string;
-  type: 'error' | 'warning';
+  type: 'error' | 'warning' | 'success';
   duration?: number;
   onClose: () => void;
 }
@@ -26,6 +26,15 @@ const Toast: React.FC<ToastProps> = ({ message, type, duration = 3000, onClose }
         borderColor: '#fca5a5',
         textColor: '#b91c1c',
         icon: '❌',
+        title: '错误',
+      };
+    } else if (type === 'success') {
+      return {
+        backgroundColor: '#f0fdf4',
+        borderColor: '#bbf7d0',
+        textColor: '#15803d',
+        icon: '✅',
+        title: '成功',
       };
     } else {
       return {
@@ -33,6 +42,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, duration = 3000, onClose }
         borderColor: '#fcd34d',
         textColor: '#92400e',
         icon: '⚠️',
+        title: '警告',
       };
     }
   };
@@ -54,7 +64,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, duration = 3000, onClose }
         <div className="text-xl flex-shrink-0">{styles.icon}</div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium" style={{ color: styles.textColor }}>
-            {type === 'error' ? '错误' : '警告'}
+            {styles.title}
           </p>
           <p className="text-sm mt-1" style={{ color: styles.textColor }}>
             {message}

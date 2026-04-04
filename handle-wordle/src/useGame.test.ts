@@ -13,7 +13,6 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { useGame } from './useGame';
-import { getDailyIdiom, getRandomIdiom, isValidIdiom } from './words';
 
 // 模拟 words 模块
 jest.mock('./words', () => ({

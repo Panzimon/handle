@@ -657,6 +657,7 @@ export function getRandomIdiom(): string {
 
 // 检查是否是有效的四字词语
 export function isValidIdiom(input: string): boolean {
+  if (!input || typeof input !== 'string') return false;
   if (input.length !== 4) return false;
   // 只检查是否是四个汉字，不限制是否在词库中
   return /^[\u4e00-\u9fa5]{4}$/.test(input);

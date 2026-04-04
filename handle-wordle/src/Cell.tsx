@@ -1,4 +1,5 @@
 import type { CellData } from './types';
+import { getFullPinyin } from './pinyin';
 
 interface CellProps {
   data: CellData;
@@ -7,7 +8,7 @@ interface CellProps {
 }
 
 export function Cell({ data, isActive = false, showPinyin = true }: CellProps) {
-  const { char, pinyin, charState, initialState, finalState } = data;
+  const { char, pinyin, charState, initialState, finalState, toneState } = data;
 
   // 根据状态获取背景色类名
   const getBgColorClass = () => {
@@ -67,66 +68,128 @@ export function Cell({ data, isActive = false, showPinyin = true }: CellProps) {
     }
   };
 
-  // 添加声调标记到正确的位置
-  const addToneMark = (initial: string, final: string, tone: number) => {
-    if (tone === 0) {
-      return initial + final;
-    }
-    
-    const toneMarks = ['', 'āáǎà', 'ēéěè', 'īíǐì', 'ōóǒò', 'ūúǔù', 'ǖǘǚǜ'];
-    const vowels = 'aeiouvü';
-    
-    // 找到韵母中的主要元音
-    let mainVowel = '';
-    let vowelIndex = -1;
-    
-    // 优先顺序：a > o > e > i > u > v/ü
-    for (const vowel of vowels) {
-      const index = final.toLowerCase().indexOf(vowel);
-      if (index !== -1) {
-        mainVowel = final[index];
-        vowelIndex = index;
-        break;
-      }
-    }
-    
-    if (vowelIndex === -1) {
-      return initial + final;
-    }
-    
-    // 替换主要元音为带声调的版本
-    let vowelWithTone = '';
-    switch (mainVowel.toLowerCase()) {
-      case 'a':
-        vowelWithTone = toneMarks[1][tone-1];
-        break;
-      case 'e':
-        vowelWithTone = toneMarks[2][tone-1];
-        break;
-      case 'i':
-        vowelWithTone = toneMarks[3][tone-1];
-        break;
-      case 'o':
-        vowelWithTone = toneMarks[4][tone-1];
-        break;
-      case 'u':
-        vowelWithTone = toneMarks[5][tone-1];
-        break;
-      case 'v':
-      case 'ü':
-        vowelWithTone = toneMarks[6][tone-1];
-        break;
-      default:
-        vowelWithTone = mainVowel;
-    }
-    
-    const newFinal = final.substring(0, vowelIndex) + vowelWithTone + final.substring(vowelIndex + 1);
-    return initial + newFinal;
-  };
 
-  // 生成带声调的拼音
-  const fullPinyin = addToneMark(pinyin.initial, pinyin.final, pinyin.tone);
-  const finalWithTone = fullPinyin.substring(pinyin.initial.length);
+
+  // 渲染带声调的拼音
+  const renderPinyin = () => {
+    try {
+      // 使用 pinyin 对象中的数据
+      const initial = pinyin.initial;
+      const final = pinyin.final;
+      const tone = pinyin.tone;
+      
+      // 声调符号映射
+      const toneSymbols = ['', 'ˉ', 'ˊ', 'ˇ', 'ˋ'];
+      const toneSymbol = toneSymbols[tone] || '';
+      
+      // 查找韵母中的主要元音，按照标调规则：a > o > e > i > u > ü
+      let vowelIndex = -1;
+      let vowel = '';
+      
+      // 第一步：查找a
+      if (final.includes('a')) {
+        vowelIndex = final.indexOf('a');
+        vowel = 'a';
+      }
+      // 第二步：查找o
+      else if (final.includes('o')) {
+        vowelIndex = final.indexOf('o');
+        vowel = 'o';
+      }
+      // 第三步：查找e
+      else if (final.includes('e')) {
+        vowelIndex = final.indexOf('e');
+        vowel = 'e';
+      }
+      // 第四步：处理i和u的情况
+      else if (final.includes('i') && final.includes('u')) {
+        // iu和ui的情况，标在后面的字母上
+        if (final.endsWith('u')) {
+          vowelIndex = final.lastIndexOf('u');
+          vowel = 'u';
+        } else {
+          vowelIndex = final.lastIndexOf('i');
+          vowel = 'i';
+        }
+      }
+      // 第五步：查找i
+      else if (final.includes('i')) {
+        vowelIndex = final.indexOf('i');
+        vowel = 'i';
+      }
+      // 第六步：查找u
+      else if (final.includes('u')) {
+        vowelIndex = final.indexOf('u');
+        vowel = 'u';
+      }
+      // 第七步：查找ü
+      else if (final.includes('ü')) {
+        vowelIndex = final.indexOf('ü');
+        vowel = 'ü';
+      }
+      
+      if (vowelIndex !== -1 && toneSymbol) {
+        const beforeVowel = final.substring(0, vowelIndex);
+        const afterVowel = final.substring(vowelIndex + 1);
+        
+        return (
+          <>
+            {initial && (
+              <span className={`${getPinyinColorClass(initialState)}`}>
+                {initial}
+              </span>
+            )}
+            {beforeVowel && (
+              <span className={`${getPinyinColorClass(finalState)}`}>
+                {beforeVowel}
+              </span>
+            )}
+            <span className="relative inline-block text-center">
+              <span className={`${getPinyinColorClass(finalState)}`}>
+                {vowel}
+              </span>
+              <span className={`${getPinyinColorClass(toneState)} absolute -top-0.5 left-0 w-full text-center`}>
+                {toneSymbol}
+              </span>
+            </span>
+            {afterVowel && (
+              <span className={`${getPinyinColorClass(finalState)}`}>
+                {afterVowel}
+              </span>
+            )}
+          </>
+        );
+      }
+      
+      // 如果没有找到元音或没有声调，直接显示
+      return (
+        <>
+          {initial && (
+            <span className={`${getPinyinColorClass(initialState)}`}>
+              {initial}
+            </span>
+          )}
+          <span className={`${getPinyinColorClass(finalState)}`}>
+            {final}
+          </span>
+        </>
+      );
+    } catch (error) {
+      // 当出现错误时，使用默认逻辑
+      return (
+        <>
+          {pinyin.initial && (
+            <span className={`${getPinyinColorClass(initialState)}`}>
+              {pinyin.initial}
+            </span>
+          )}
+          <span className={`${getPinyinColorClass(finalState)}`}>
+            {pinyin.final}
+          </span>
+        </>
+      );
+    }
+  };
 
   return (
     <div 
@@ -144,13 +207,8 @@ export function Cell({ data, isActive = false, showPinyin = true }: CellProps) {
       `}
     >
       {showPinyin && (pinyin.initial || pinyin.final) && (
-        <div className="flex items-center justify-center gap-0.5 text-xs sm:text-sm font-bold mb-1 z-10">
-          <span className={`${getPinyinColorClass(initialState)}`}>
-            {pinyin.initial}
-          </span>
-          <span className={`${getPinyinColorClass(finalState)}`}>
-            {finalWithTone}
-          </span>
+        <div className="flex items-center justify-center text-xs sm:text-sm font-bold mb-1 z-10">
+          {renderPinyin()}
         </div>
       )}
       <div className="text-xl sm:text-2xl font-bold text-center">{char}</div>

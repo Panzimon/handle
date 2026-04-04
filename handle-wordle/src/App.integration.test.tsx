@@ -1,5 +1,4 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import App from './App';
 
 // 模拟 useGame 钩子
@@ -49,9 +48,7 @@ jest.mock('./pinyin', () => ({
   }),
 }));
 
-// 导入 useGame 钩子
-import { useGame } from './useGame';
-const useGameMock = useGame as jest.MockedFunction<typeof useGame>;
+
 
 describe('App Component Integration Tests', () => {
   beforeEach(() => {

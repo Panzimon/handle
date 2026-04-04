@@ -3,6 +3,9 @@ import { useGame } from './useGame';
 import { Cell } from './Cell';
 import { getPinyin } from './pinyin';
 import Toast from './Toast';
+import { generateShareText, copyToClipboard } from './utils/share';
+import { createShareImageElement, saveShareImage } from './utils/imageShare';
+import type { HintUsage } from './types';
 
 const WORD_LENGTH = 4;
 const MAX_ATTEMPTS = 10;
@@ -19,13 +22,17 @@ function App() {
     handleSubmit,
     playAgain,
     changeWord: changeWordGame,
+    // 计时器相关
+    elapsedTime,
+    formattedTime,
+    isTimerRunning,
   } = useGame();
 
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSadAnimation, setShowSadAnimation] = useState(false);
   const [showGuessAnimation, setShowGuessAnimation] = useState(false);
   const [guessAnimationRow, setGuessAnimationRow] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'error' | 'warning' } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'error' | 'warning' | 'success' } | null>(null);
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
   const [isInputComposing, setIsInputComposing] = useState(false);
 
@@ -82,7 +89,7 @@ function App() {
   };
 
   // 显示toast提示
-  const showToast = (message: string, type: 'error' | 'warning') => {
+  const showToast = (message: string, type: 'error' | 'warning' | 'success') => {
     setToast({ message, type });
   };
 
@@ -132,6 +139,62 @@ function App() {
     setTimeout(() => {
       playAgain();
     }, 50);
+  };
+
+  // 处理文本分享
+  const handleTextShare = () => {
+    const actualAttempts = grid.filter(row => 
+      row.some(cell => cell.charState !== 'empty')
+    ).length;
+    
+    const hintUsage: HintUsage = {
+      used: hintGenerated,
+      level: hintLevel,
+    };
+    
+    const text = generateShareText(
+      grid,
+      actualAttempts,
+      gameState === 'won',
+      hintUsage,
+      elapsedTime
+    );
+    
+    copyToClipboard(text).then(success => {
+      if (success) {
+        showToast('已复制到剪贴板', 'success');
+      } else {
+        showToast('复制失败，请手动复制', 'error');
+      }
+    });
+  };
+
+  // 处理图片分享
+  const handleImageShare = () => {
+    const actualAttempts = grid.filter(row => 
+      row.some(cell => cell.charState !== 'empty')
+    ).length;
+    
+    const hintUsage: HintUsage = {
+      used: hintGenerated,
+      level: hintLevel,
+    };
+    
+    const shareElement = createShareImageElement(
+      grid,
+      actualAttempts,
+      gameState === 'won',
+      hintUsage,
+      elapsedTime
+    );
+    
+    saveShareImage(shareElement).then(success => {
+      if (success) {
+        showToast('图片已保存', 'success');
+      } else {
+        showToast('保存图片失败，请重试', 'error');
+      }
+    });
   };
 
   // 播放音效
@@ -458,12 +521,24 @@ function App() {
         )}
 
         {gameState !== 'playing' && (
-          <div className="flex flex-col sm:flex-row gap-3 justify-center relative z-10">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center relative z-10 flex-wrap">
             <button 
               onClick={handlePlayAgain}
               className="px-6 sm:px-8 py-2.5 sm:py-3 bg-primary text-white rounded-lg font-semibold hover:bg-green-600 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
             >
               再玩一次
+            </button>
+            <button 
+              onClick={handleTextShare}
+              className="px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
+            >
+              📋 复制结果
+            </button>
+            <button 
+              onClick={handleImageShare}
+              className="px-6 sm:px-8 py-2.5 sm:py-3 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
+            >
+              💾 保存图片
             </button>
             <button 
               onClick={changeWord}
@@ -473,6 +548,17 @@ function App() {
             </button>
           </div>
         )}
+
+        {/* 计时器显示 - 移动到下方，降低视觉权重 */}
+        <div className="mt-4 sm:mt-5 mb-2 sm:mb-3 text-center">
+          <span 
+            className={`font-mono text-sm sm:text-base font-medium tracking-wide transition-all duration-200 ${
+              isTimerRunning ? 'text-gray-600' : 'text-gray-500'
+            }`}
+          >
+            用时 {formattedTime}
+          </span>
+        </div>
 
         <footer className="mt-auto py-4 sm:py-5 text-center text-gray-500 text-xs sm:text-sm">
           <p>

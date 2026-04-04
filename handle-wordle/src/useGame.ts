@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
-import type { CellData, CellState, GameState } from './types';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import type { CellData, CellState, GameState, TimerState } from './types';
 import { getPinyin } from './pinyin';
 import { getDailyIdiom, getRandomIdiom, isValidIdiom } from './words';
 
@@ -24,7 +24,7 @@ function createEmptyRow(): CellData[] {
 }
 
 // 检查猜测结果
-function checkGuess(guess: string, answer: string): CellData[] {
+export function checkGuess(guess: string, answer: string): CellData[] {
   const result: CellData[] = [];
   const answerPinyins = answer.split('').map(getPinyin);
   const guessPinyins = guess.split('').map(getPinyin);
@@ -149,6 +149,125 @@ export function useGame() {
   const [message, setMessage] = useState('');
   const [shakeRow, setShakeRow] = useState<number | null>(null);
 
+  // 计时器状态
+  const [timer, setTimer] = useState<TimerState>({
+    startTime: 0,
+    pauseTime: 0,
+    isRunning: false,
+    elapsedTime: 0,
+  });
+
+  // 使用 ref 来存储 timer 的最新值，用于在 effect 中访问
+  const timerRef = useRef(timer);
+  timerRef.current = timer;
+
+  // 计算格式化时间 (MM:SS)
+  const formattedTime = useMemo(() => {
+    const totalSeconds = Math.floor(timer.elapsedTime / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }, [timer.elapsedTime]);
+
+  // 启动计时器
+  const startTimer = useCallback(() => {
+    const now = performance.now();
+    setTimer(prev => ({
+      ...prev,
+      startTime: now,
+      isRunning: true,
+    }));
+  }, []);
+
+  // 停止计时器
+  const stopTimer = useCallback(() => {
+    const now = performance.now();
+    setTimer(prev => ({
+      ...prev,
+      pauseTime: now,
+      isRunning: false,
+      elapsedTime: prev.startTime > 0 ? now - prev.startTime : prev.elapsedTime,
+    }));
+  }, []);
+
+  // 暂停计时器
+  const pauseTimer = useCallback(() => {
+    if (!timerRef.current.isRunning) return;
+    const now = performance.now();
+    setTimer(prev => ({
+      ...prev,
+      pauseTime: now,
+      isRunning: false,
+      elapsedTime: prev.startTime > 0 ? now - prev.startTime : prev.elapsedTime,
+    }));
+  }, []);
+
+  // 恢复计时器
+  const resumeTimer = useCallback(() => {
+    if (timerRef.current.isRunning) return;
+    const now = performance.now();
+    setTimer(prev => ({
+      ...prev,
+      startTime: now - prev.elapsedTime,
+      isRunning: true,
+    }));
+  }, []);
+
+  // 重置计时器
+  const resetTimer = useCallback(() => {
+    setTimer({
+      startTime: 0,
+      pauseTime: 0,
+      isRunning: false,
+      elapsedTime: 0,
+    });
+  }, []);
+
+  // 计时器更新 effect
+  useEffect(() => {
+    let animationFrameId: number;
+
+    const updateTimer = () => {
+      if (timerRef.current.isRunning && timerRef.current.startTime > 0) {
+        const now = performance.now();
+        const elapsed = now - timerRef.current.startTime;
+        setTimer(prev => ({
+          ...prev,
+          elapsedTime: elapsed,
+        }));
+      }
+      animationFrameId = requestAnimationFrame(updateTimer);
+    };
+
+    animationFrameId = requestAnimationFrame(updateTimer);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  // 监听页面可见性变化（后台运行处理）
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // 页面隐藏，暂停计时
+        if (timerRef.current.isRunning && gameState === 'playing') {
+          pauseTimer();
+        }
+      } else {
+        // 页面显示，恢复计时
+        if (!timerRef.current.isRunning && gameState === 'playing') {
+          resumeTimer();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [gameState, pauseTimer, resumeTimer]);
+
   // 初始化游戏
   useEffect(() => {
     initGame();
@@ -163,7 +282,12 @@ export function useGame() {
     setGameState('playing');
     setMessage('');
     setShakeRow(null);
-  }, []);
+    // 重置并启动计时器
+    resetTimer();
+    setTimeout(() => {
+      startTimer();
+    }, 0);
+  }, [resetTimer, startTimer]);
 
   // 再玩一次（使用当前成语）
   const playAgain = useCallback(() => {
@@ -173,7 +297,12 @@ export function useGame() {
     setGameState('playing');
     setMessage('');
     setShakeRow(null);
-  }, []);
+    // 重置并启动计时器
+    resetTimer();
+    setTimeout(() => {
+      startTimer();
+    }, 0);
+  }, [resetTimer, startTimer]);
 
   // 换一个词（随机获取新词）
   const changeWord = useCallback(() => {
@@ -185,7 +314,12 @@ export function useGame() {
     setGameState('playing');
     setMessage('');
     setShakeRow(null);
-  }, []);
+    // 重置并启动计时器
+    resetTimer();
+    setTimeout(() => {
+      startTimer();
+    }, 0);
+  }, [resetTimer, startTimer]);
 
   // 处理输入
   const handleInput = useCallback((char: string) => {
@@ -239,13 +373,17 @@ export function useGame() {
     if (isWin) {
       setGameState('won');
       setMessage('恭喜你，猜对了！');
+      // 停止计时器
+      stopTimer();
     } else if (grid.length >= MAX_ATTEMPTS) {
       setGameState('lost');
       setMessage(`游戏结束，答案是：${answer}`);
+      // 停止计时器
+      stopTimer();
     } else {
       setCurrentInput('');
     }
-  }, [currentInput, grid.length, answer, gameState]);
+  }, [currentInput, grid.length, answer, gameState, stopTimer]);
 
 
 
@@ -263,5 +401,9 @@ export function useGame() {
     initGame,
     playAgain,
     changeWord,
+    // 计时器相关
+    elapsedTime: timer.elapsedTime,
+    formattedTime,
+    isTimerRunning: timer.isRunning,
   };
 }
