@@ -8,6 +8,26 @@
   --neutral: #787c7e;
 }
 
+/* 鼠标悬停样式 - 可点击按钮 */
+button,
+.btn,
+[onclick] {
+  cursor: pointer;
+}
+
+/* 鼠标悬停样式 - 输入区域 */
+input,
+textarea,
+select {
+  cursor: text;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  cursor: text;
+}
+
 @layer components {
   .bg-primary {
     background-color: var(--primary);
