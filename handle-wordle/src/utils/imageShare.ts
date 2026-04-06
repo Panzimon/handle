@@ -45,13 +45,18 @@ export function createShareImageElement(
 ): HTMLElement {
   const container = document.createElement('div');
   container.style.cssText = `
-    width: 320px;
-    padding: 24px;
+    width: 368px;
+    height: 448px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 16px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: white;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
   `;
 
   // 标题
@@ -61,43 +66,35 @@ export function createShareImageElement(
     font-size: 20px;
     font-weight: bold;
     margin-bottom: 12px;
+    width: 100%;
   `;
   title.textContent = `汉兜 · 第 ${getDayNumber()} 期`;
   container.appendChild(title);
 
   // 提示状态徽章
   const config = hintUsage.used ? HINT_STATUS_CONFIG[hintUsage.level as keyof typeof HINT_STATUS_CONFIG] || HINT_STATUS_CONFIG[1] : HINT_STATUS_CONFIG[0];
-  const badgeWrapper = document.createElement('div');
-  badgeWrapper.style.cssText = `
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 16px;
-    width: 100%;
-  `;
-
   const badge = document.createElement('div');
   badge.style.cssText = `
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    padding: 4px 10px;
+    gap: 4px;
+    padding: 6px 14px;
     background-color: ${config.bgColor};
     border: 1px solid ${config.borderColor};
-    border-radius: 12px;
-    font-size: 10px;
+    border-radius: 16px;
+    font-size: 11px;
     font-weight: 500;
     color: ${config.color};
     white-space: nowrap;
+    text-align: center;
+    margin-bottom: 16px;
   `;
   badge.innerHTML = `
-    <span style="font-size: 12px;">${config.icon}</span>
-    <span>${config.text}</span>
+    <span style="font-size: 13px; line-height: 1;">${config.icon}</span>
+    <span style="line-height: 1;">${config.text}</span>
   `;
-
-  badgeWrapper.appendChild(badge);
-  container.appendChild(badgeWrapper);
+  container.appendChild(badge);
 
   // 游戏网格
   const gridElement = document.createElement('div');
@@ -106,6 +103,8 @@ export function createShareImageElement(
     flex-direction: column;
     gap: 8px;
     margin-bottom: 16px;
+    width: 100%;
+    align-items: center;
   `;
 
   // 渲染每一行
@@ -117,6 +116,7 @@ export function createShareImageElement(
         display: flex;
         justify-content: center;
         gap: 8px;
+        width: 100%;
       `;
 
       row.forEach(cell => {
@@ -145,12 +145,13 @@ export function createShareImageElement(
         if (cell.pinyin.initial || cell.pinyin.final) {
           const pinyinElement = document.createElement('div');
           pinyinElement.style.cssText = `
-            font-size: 10px;
+            font-size: 9px;
             font-weight: bold;
             margin-bottom: 2px;
             text-align: center;
             width: 100%;
             z-index: 10;
+            line-height: 1.2;
           `;
           
           // 构建带声调的拼音字符串
@@ -199,9 +200,10 @@ export function createShareImageElement(
         
         const charElement = document.createElement('div');
         charElement.style.cssText = `
-          font-size: 20px;
+          font-size: 18px;
           font-weight: bold;
           text-align: center;
+          line-height: 1.2;
         `;
         charElement.textContent = cell.char;
         cellElement.appendChild(charElement);
@@ -220,6 +222,7 @@ export function createShareImageElement(
     font-size: 16px;
     opacity: 0.9;
     margin-bottom: 8px;
+    width: 100%;
   `;
   result.textContent = isWin
     ? `用了 ${attempts} 次猜中！🎉`
@@ -232,6 +235,7 @@ export function createShareImageElement(
     text-align: center;
     font-size: 14px;
     opacity: 0.8;
+    width: 100%;
   `;
   const totalSeconds = Math.floor(elapsedTime / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -240,8 +244,10 @@ export function createShareImageElement(
   container.appendChild(timeInfo);
 
   // 隐藏并添加到 body（用于 html2canvas 截图）
-  container.style.position = 'absolute';
-  container.style.left = '-9999px';
+  container.id = 'share-image-container';
+  container.style.position = 'fixed';
+  container.style.top = '-9999px';
+  container.style.left = '0';
   document.body.appendChild(container);
 
   return container;
@@ -253,13 +259,83 @@ export async function saveShareImage(
   filename: string = '汉兜-分享.png'
 ): Promise<boolean> {
   try {
-    const canvas = await html2canvas(element, {
-      backgroundColor: null,
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
+    // 等待元素渲染
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // 创建临时 iframe
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.top = '-9999px';
+    iframe.style.left = '-9999px';
+    iframe.style.width = '400px';
+    iframe.style.height = '500px';
+    iframe.style.backgroundColor = 'transparent';
+    document.body.appendChild(iframe);
+
+    // 等待 iframe 加载
+    await new Promise(resolve => {
+      iframe.onload = resolve;
+      // 复制元素到 iframe
+      if (iframe.contentDocument) {
+        // 设置 iframe body 背景为透明
+        iframe.contentDocument.body.style.backgroundColor = 'transparent';
+        iframe.contentDocument.body.style.margin = '0';
+        iframe.contentDocument.body.style.padding = '0';
+        
+        const clone = element.cloneNode(true) as HTMLElement;
+        clone.style.position = 'static';
+        clone.style.left = 'auto';
+        clone.style.top = 'auto';
+        clone.style.transform = 'none';
+        clone.style.visibility = 'visible';
+        clone.style.clipPath = 'none';
+        clone.style.zIndex = 'auto';
+        
+        iframe.contentDocument.body.appendChild(clone);
+        // 触发 onload
+        iframe.onload();
+      }
     });
+
+    // 在 iframe 中截图
+    let canvas: HTMLCanvasElement | null = null;
+    if (iframe.contentDocument) {
+      const clonedElement = iframe.contentDocument.querySelector('#share-image-container');
+      if (clonedElement) {
+        // 确保 iframe 尺寸与元素一致
+        iframe.style.width = `${clonedElement.offsetWidth}px`;
+        iframe.style.height = `${clonedElement.offsetHeight}px`;
+        
+        canvas = await html2canvas(clonedElement, {
+          backgroundColor: null,
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          scrollX: 0,
+          scrollY: 0,
+          foreignObjectRendering: true,
+          width: clonedElement.offsetWidth,
+          height: clonedElement.offsetHeight,
+          x: 0,
+          y: 0
+        });
+      }
+    }
+
+    // 清理 iframe
+    if (iframe.parentNode) {
+      iframe.parentNode.removeChild(iframe);
+    }
+
+    // 清理原始元素
+    if (element.parentNode) {
+      element.parentNode.removeChild(element);
+    }
+
+    if (!canvas) {
+      throw new Error('无法生成图片');
+    }
 
     // 创建下载链接
     const link = document.createElement('a');
@@ -267,13 +343,11 @@ export async function saveShareImage(
     link.href = canvas.toDataURL('image/png', 1.0);
     link.click();
 
-    // 清理
-    document.body.removeChild(element);
-
     return true;
   } catch (err) {
     console.error('保存图片失败:', err);
-    if (element.parentNode) {
+    // 清理元素
+    if (element && element.parentNode) {
       element.parentNode.removeChild(element);
     }
     return false;

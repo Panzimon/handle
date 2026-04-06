@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from './useGame';
 import { Cell } from './Cell';
 import { getPinyin } from './pinyin';
@@ -160,13 +160,9 @@ function App() {
       elapsedTime
     );
     
-    copyToClipboard(text).then(success => {
-      if (success) {
-        showToast('已复制到剪贴板', 'success');
-      } else {
-        showToast('复制失败，请手动复制', 'error');
-      }
-    });
+    setSharePreview(text);
+    setShareType('text');
+    setShowShareConfirm(true);
   };
 
   // 处理图片分享
@@ -180,7 +176,8 @@ function App() {
       level: hintLevel,
     };
     
-    const shareElement = createShareImageElement(
+    // 为预览创建一个元素
+    const element = createShareImageElement(
       grid,
       actualAttempts,
       gameState === 'won',
@@ -188,31 +185,131 @@ function App() {
       elapsedTime
     );
     
-    saveShareImage(shareElement).then(success => {
-      if (success) {
-        showToast('图片已保存', 'success');
-      } else {
-        showToast('保存图片失败，请重试', 'error');
-      }
-    });
+    setPreviewElement(element);
+    setShareType('image');
+    setShowShareConfirm(true);
   };
 
-  // 播放音效
+  // 确认分享
+  const confirmShare = () => {
+    if (shareType === 'text' && typeof sharePreview === 'string') {
+      copyToClipboard(sharePreview).then(success => {
+        if (success) {
+          showToast('已复制到剪贴板', 'success');
+        } else {
+          showToast('复制失败，请手动复制', 'error');
+        }
+        cleanupSharePreview();
+      });
+    } else if (shareType === 'image') {
+      // 为实际分享创建一个新的元素
+      const actualAttempts = grid.filter(row => 
+        row.some(cell => cell.charState !== 'empty')
+      ).length;
+      
+      const hintUsage: HintUsage = {
+        used: hintGenerated,
+        level: hintLevel,
+      };
+      
+      const shareElement = createShareImageElement(
+        grid,
+        actualAttempts,
+        gameState === 'won',
+        hintUsage,
+        elapsedTime
+      );
+      
+      saveShareImage(shareElement).then(success => {
+        if (success) {
+          showToast('图片已保存', 'success');
+        } else {
+          showToast('保存图片失败，请重试', 'error');
+        }
+        // 不要清理预览，让用户手动关闭模态框
+        // cleanupSharePreview();
+      });
+    } else {
+      cleanupSharePreview();
+    }
+  };
+
+  // 取消分享
+  const cancelShare = () => {
+    // 直接关闭模态框
+    setShowShareConfirm(false);
+    // 清理其他状态
+    if (previewRef.current) {
+      previewRef.current.innerHTML = '';
+    }
+    setShareType(null);
+    setSharePreview(null);
+    setPreviewElement(null);
+  };
+
+  // 清理预览资源
+  const cleanupSharePreview = () => {
+    // 清理预览元素
+    if (previewRef.current) {
+      previewRef.current.innerHTML = '';
+    }
+    // 不关闭模态框，让用户手动关闭
+    // setShowShareConfirm(false);
+    setShareType(null);
+    setSharePreview(null);
+    setPreviewElement(null);
+  };
+
+  // 播放音效 - 使用 Web Audio API 生成，避免跨域问题
   const playSound = (type: 'win' | 'lose' | 'guess') => {
     try {
-      const audio = new Audio();
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+
       if (type === 'win') {
-        // 成功音效 - 使用CDN
-        audio.src = 'https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3';
+        // 成功音效 - 上升音阶
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, i) => {
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          osc.connect(gain);
+          gain.connect(audioContext.destination);
+          osc.frequency.value = freq;
+          osc.type = 'sine';
+          gain.gain.setValueAtTime(0.3, audioContext.currentTime + i * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.3);
+          osc.start(audioContext.currentTime + i * 0.1);
+          osc.stop(audioContext.currentTime + i * 0.1 + 0.3);
+        });
       } else if (type === 'lose') {
-        // 失败音效 - 使用CDN
-        audio.src = 'https://assets.mixkit.co/sfx/preview/mixkit-sad-game-over-trombone-471.mp3';
+        // 失败音效 - 低沉下降旋律，更悲伤
+        const notes = [392.00, 349.23, 329.63, 293.66, 261.63, 220.00]; // G4, F4, Eb4, D4, C4, A3
+        notes.forEach((freq, i) => {
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          osc.connect(gain);
+          gain.connect(audioContext.destination);
+          osc.frequency.value = freq;
+          osc.type = 'sine';
+          const startTime = audioContext.currentTime + i * 0.2;
+          gain.gain.setValueAtTime(0, startTime);
+          gain.gain.linearRampToValueAtTime(0.25, startTime + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
+          osc.start(startTime);
+          osc.stop(startTime + 0.4);
+        });
       } else {
-        // 猜测音效 - 使用CDN
-        audio.src = 'https://assets.mixkit.co/sfx/preview/mixkit-quick-win-video-game-notification-269.mp3';
+        // 猜测音效 - 短促点击音
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.frequency.value = 800;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        osc.start(audioContext.currentTime);
+        osc.stop(audioContext.currentTime + 0.1);
       }
-      audio.volume = 0.5;
-      audio.play().catch(err => console.log('Audio play error:', err));
     } catch (error) {
       console.log('Error playing sound:', error);
     }
@@ -291,9 +388,42 @@ function App() {
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [showCheatSheet, setShowCheatSheet] = useState(false);
+  const [showShareConfirm, setShowShareConfirm] = useState(false);
+  const [shareType, setShareType] = useState<'text' | 'image' | null>(null);
+  const [sharePreview, setSharePreview] = useState<string | null>(null);
+  const [previewElement, setPreviewElement] = useState<HTMLElement | null>(null);
   const [hintLevel, setHintLevel] = useState(1);
   const [currentHint, setCurrentHint] = useState<{ char: string; pinyin: string } | null>(null);
   const [hintGenerated, setHintGenerated] = useState(false);
+  const previewRef = React.useRef<HTMLDivElement>(null);
+
+  // 当预览元素变化时，将其添加到 ref 容器中
+  useEffect(() => {
+    if (previewElement && previewRef.current) {
+      // 清空容器
+      previewRef.current.innerHTML = '';
+      // 添加预览元素的克隆
+      const clone = previewElement.cloneNode(true) as HTMLElement;
+      // 移除定位样式，使其正常显示
+      clone.style.position = 'static';
+      clone.style.left = 'auto';
+      clone.style.transform = 'none';
+      clone.style.visibility = 'visible';
+      // 确保克隆元素不受模态框 CSS 影响
+      clone.style.width = '368px';
+      clone.style.height = '448px';
+      clone.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      clone.style.borderRadius = '16px';
+      clone.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      clone.style.color = 'white';
+      clone.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.2)';
+      clone.style.display = 'flex';
+      clone.style.flexDirection = 'column';
+      clone.style.alignItems = 'center';
+      clone.style.justifyContent = 'center';
+      previewRef.current.appendChild(clone);
+    }
+  }, [previewElement]);
 
   const getPinyinState = (type: 'initial' | 'final', value: string) => {
     // 首先检查是否有correct状态的匹配（颜色锁定机制）
@@ -532,13 +662,13 @@ function App() {
               onClick={handleTextShare}
               className="px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
             >
-              📋 复制结果
+              📝 文字分享
             </button>
             <button 
               onClick={handleImageShare}
               className="px-6 sm:px-8 py-2.5 sm:py-3 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
             >
-              💾 保存图片
+              🖼️ 图片分享
             </button>
             <button 
               onClick={changeWord}
@@ -763,6 +893,65 @@ function App() {
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 分享确认模态框 */}
+        {showShareConfirm && (
+          <div 
+            onClick={cancelShare}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+          >
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
+            >
+              <div className="flex justify-between items-center p-4 sm:p-5 border-b border-gray-200 sticky top-0 bg-white">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">确认分享</h2>
+                <button 
+                  onClick={cancelShare}
+                  className="text-gray-500 hover:text-gray-900 transition-colors text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="p-4 sm:p-6">
+                <p className="text-sm sm:text-base text-gray-700 mb-4">
+                  {shareType === 'text' ? '确认要复制文字分享内容吗？' : '确认要保存图片分享吗？'}
+                </p>
+                
+                {/* 预览区域 */}
+                <div className="mb-6">
+                  {shareType === 'text' && typeof sharePreview === 'string' && (
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 font-mono text-sm whitespace-pre-wrap">
+                      {sharePreview}
+                    </div>
+                  )}
+                  {shareType === 'image' && (
+                    <div className="flex justify-center">
+                      <div className="bg-white p-2 rounded-lg shadow-md" ref={previewRef}>
+                        {/* 预览元素将通过 ref 动态添加 */}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex gap-3 justify-end">
+                  <button 
+                    onClick={cancelShare}
+                    className="px-6 sm:px-8 py-2.5 sm:py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
+                  >
+                    取消
+                  </button>
+                  <button 
+                    onClick={confirmShare}
+                    className="px-6 sm:px-8 py-2.5 sm:py-3 bg-primary text-white rounded-lg font-semibold hover:bg-green-600 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
+                  >
+                    确认
+                  </button>
                 </div>
               </div>
             </div>
