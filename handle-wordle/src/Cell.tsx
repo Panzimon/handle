@@ -146,7 +146,7 @@ export function Cell({ data, isActive = false, showPinyin = true }: CellProps) {
             )}
             <span className="relative inline-block text-center">
               <span className={`${getPinyinColorClass(finalState)}`}>
-                {vowel}
+                {vowel === 'i' && toneSymbol ? 'ı' : vowel}
               </span>
               <span className={`${getPinyinColorClass(toneState)} absolute -top-0.5 left-0 w-full text-center`}>
                 {toneSymbol}
