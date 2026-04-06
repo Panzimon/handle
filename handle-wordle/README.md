@@ -1,30 +1,147 @@
-# React + TypeScript + Vite
+# 汉字 Wordle
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一个基于 React + TypeScript + Vite 构建的汉字版 Wordle 游戏，玩家需要在 10 次机会内猜出四字成语。
 
-Currently, two official plugins are available:
+## 游戏功能
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 🎯 **猜四字成语**：玩家有 10 次机会猜测一个四字成语
+- 🔍 **智能提示**：通过颜色标识汉字、声母、韵母、声调与正确答案的区别
+  - 青色：完全正确（位置和内容都对）
+  - 橙色：存在但位置不对
+  - 灰色：不存在于答案中
+- 📱 **响应式设计**：适配不同屏幕尺寸
+- 🔊 **游戏音效**：成功、失败和猜测时的音效
+- 🎉 **动画效果**：成功时的庆祝动画和失败时的反馈动画
+- ⏱️ **计时功能**：记录游戏用时
+- 💡 **提示系统**：提供不同级别的游戏提示
+- 📤 **分享功能**：支持文字分享和图片分享
+- 📖 **拼音速查表**：方便查看声母和韵母
 
-## Expanding the ESLint configuration
+## 技术栈
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **前端框架**：React 18.2.0
+- **类型系统**：TypeScript
+- **构建工具**：Vite 4.5.0
+- **测试框架**：Jest
+- **其他依赖**：
+  - pinyin：用于汉字转拼音
+  - html-to-image 和 html2canvas：用于图片分享功能
 
-- Configure the top-level `parserOptions` property like this:
+## 快速开始
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+### 安装依赖
+
+```bash
+npm install
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+### 开发模式
+
+```bash
+npm run dev
+```
+
+### 构建生产版本
+
+```bash
+npm run build
+```
+
+### 预览生产构建
+
+```bash
+npm run preview
+```
+
+### 运行测试
+
+```bash
+npm run test
+```
+
+## 游戏规则
+
+1. 你有 10 次机会猜一个四字成语
+2. 每次猜测后，汉字与拼音的颜色将会标识其与正确答案的区别：
+   - **青色**：表示该元素（汉字、声母、韵母、声调）出现在答案中且位置正确
+   - **橙色**：表示该元素出现在答案中但位置不对
+   - **灰色**：表示该元素不存在于答案中
+3. 当四个格子都为青色时，你便赢得了游戏！
+4. 你可以使用提示功能获取帮助，但会在分享结果中标记使用了提示
+5. 游戏结束后，你可以分享你的成绩
+
+## 项目结构
+
+```
+handle-wordle/
+├── public/            # 静态资源
+├── src/
+│   ├── assets/        # 资源文件
+│   ├── utils/         # 工具函数
+│   │   ├── imageShare.ts  # 图片分享功能
+│   │   └── share.ts       # 文字分享功能
+│   ├── App.tsx        # 主应用组件
+│   ├── Cell.tsx       # 格子组件
+│   ├── Keyboard.tsx   # 键盘组件
+│   ├── Toast.tsx      # 提示组件
+│   ├── pinyin.ts      # 拼音处理
+│   ├── useGame.ts     # 游戏逻辑钩子
+│   ├── words.ts       # 成语库
+│   └── types.ts       # 类型定义
+├── package.json       # 项目配置
+├── tsconfig.json      # TypeScript 配置
+└── vite.config.ts     # Vite 配置
+```
+
+## 核心功能实现
+
+### 1. 游戏逻辑
+
+游戏逻辑主要在 `useGame.ts` 中实现，包括：
+- 生成随机成语作为答案
+- 处理用户输入和猜测
+- 计算每个位置的状态（正确、存在但位置不对、不存在）
+- 管理游戏状态（游戏中、胜利、失败）
+- 计时器功能
+
+### 2. 拼音处理
+
+`pinyin.ts` 负责将汉字转换为拼音，包括：
+- 声母、韵母和声调的提取
+- 拼音的正确显示
+
+### 3. 分享功能
+
+- `share.ts`：生成文字分享内容并复制到剪贴板
+- `imageShare.ts`：生成分享图片并保存
+
+### 4. 动画效果
+
+- 成功时的庆祝动画（彩色纸屑）
+- 失败时的反馈动画
+- 猜测时的动画效果
+
+## 浏览器兼容性
+
+- 支持所有现代浏览器
+- 使用了 Web Audio API 用于音效，部分旧浏览器可能不支持
+
+## 项目特点
+
+- **用户友好**：清晰的游戏规则和视觉反馈
+- **响应式设计**：在手机、平板和桌面设备上都有良好的体验
+- **性能优化**：使用 React 18 的新特性和 Vite 的快速构建
+- **可扩展性**：模块化的代码结构，易于添加新功能
+- **测试覆盖**：完善的测试用例，确保游戏功能的稳定性
+
+## 许可证
+
+MIT
+
+## 鸣谢
+
+灵感来源于 [Handle](https://handle.antfu.me/) 项目
+
+---
+
+希望你喜欢这个汉字 Wordle 游戏！如果有任何问题或建议，欢迎提交 issue 或 Pull Request。
