@@ -9,7 +9,6 @@
  */
 
 import { checkGuess } from './useGame';
-import { getPinyin } from './pinyin';
 
 // 模拟答案为"愁眉不展"的场景
 const ANSWER_CHOU_MEI_BU_ZHAN = '愁眉不展';

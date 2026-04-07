@@ -2,8 +2,6 @@ import { getDailyIdiom, getRandomIdiom, isValidIdiom, IDIOMS } from './words';
 
 describe('words functions', () => {
   // 模拟日期，确保 getDailyIdiom 可预测
-  const originalDate = Date;
-  
   beforeEach(() => {
     // 固定日期为 2024-01-01
     const mockDate = new Date(2024, 0, 1);

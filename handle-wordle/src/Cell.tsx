@@ -1,5 +1,4 @@
 import type { CellData } from './types';
-import { getFullPinyin } from './pinyin';
 
 interface CellProps {
   data: CellData;
