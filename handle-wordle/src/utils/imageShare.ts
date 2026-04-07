@@ -272,13 +272,16 @@ export async function saveShareImage(
     iframe.style.backgroundColor = 'transparent';
     document.body.appendChild(iframe);
 
-    // 将待截图元素复制进 iframe，等待一帧确保完成渲染
-    await new Promise<void>((resolve) => {
+    // 等待 iframe 加载
+    await new Promise(resolve => {
+      iframe.onload = resolve;
+      // 复制元素到 iframe
       if (iframe.contentDocument) {
+        // 设置 iframe body 背景为透明
         iframe.contentDocument.body.style.backgroundColor = 'transparent';
         iframe.contentDocument.body.style.margin = '0';
         iframe.contentDocument.body.style.padding = '0';
-
+        
         const clone = element.cloneNode(true) as HTMLElement;
         clone.style.position = 'static';
         clone.style.left = 'auto';
@@ -287,11 +290,11 @@ export async function saveShareImage(
         clone.style.visibility = 'visible';
         clone.style.clipPath = 'none';
         clone.style.zIndex = 'auto';
-
+        
         iframe.contentDocument.body.appendChild(clone);
+        // 触发 onload
+        iframe.onload();
       }
-
-      requestAnimationFrame(() => resolve());
     });
 
     // 在 iframe 中截图
