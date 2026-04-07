@@ -2,23 +2,31 @@
 
 > 一个基于 React + TypeScript 的中文互动猜词项目，灵感来自 handle.antfu.me。
 
-一个基于 Vite + React + TypeScript 实现的互动字词游戏网页项目，围绕输入反馈、拼音提示、提示系统、分享能力和通关反馈，尽量把它做成一个可展示、可讲述、可继续迭代的作品。
+一个基于 Vite + React + TypeScript 实现的互动字词游戏网页项目，围绕输入反馈、拼音提示、提示系统、分享能力和通关反馈，尽量把它做成一个可展示、可讲述、可继续迭代的作品；当前已完成 GitHub Pages 部署，并支持 PC / 手机端访问。
 
-![status](https://img.shields.io/badge/status-finished-4c9aff)
+![status](https://img.shields.io/badge/status-online-4c9aff)
 ![stack](https://img.shields.io/badge/stack-Vite%20%7C%20React%20%7C%20TypeScript-7b61ff)
+![deploy](https://img.shields.io/badge/deploy-GitHub%20Pages-24292f)
 
 ## 项目预览
 | 类型 | 链接 |
 | --- | --- |
-| 仓库地址 | https://github.com/Panzimon/handle |
-| 在线预览 | 推送部署后可访问：`https://panzimon.github.io/handle/` |
+| 仓库地址 | [Panzimon/handle](https://github.com/Panzimon/handle) |
+| 在线体验 | [https://panzimon.github.io/handle/](https://panzimon.github.io/handle/) |
 | 动态演示 | [docs/demo.gif](./docs/demo.gif) |
 | 状态截图 | `docs/origin_status.png` / `docs/playing_status.png` / `docs/playing_status_cheatSheet_modal.png` / `docs/playing_status_tips_modal.png` / `docs/success_status.png` / `docs/fail_status.png` |
 | 架构图 | [docs/architecture.svg](./docs/architecture.svg) |
 
-> 当前仓库已按 GitHub Pages 方式完成部署配置。若 GitHub Pages 尚未启用，请在仓库 `Settings -> Pages` 中选择 `GitHub Actions`。
+> 当前项目已完成 GitHub Pages 部署，线上地址可直接访问，且已确认支持桌面端与移动端游玩。
 >
-> 目前仓库展示素材已经补齐为：**1 段 Demo GIF + 6 张关键状态截图 + 1 张架构图**，已经足够支撑仓库展示、项目复盘和日常沟通。
+> 仓库展示素材也已经补齐为：**1 段 Demo GIF + 6 张关键状态截图 + 1 张架构图**，足够用于仓库展示、项目复盘。
+
+## 快速亮点
+- **完整交互链路：** 输入、校验、提示、拼音反馈、分享与完成态反馈形成闭环。
+- **中文玩法有辨识度：** 不只判断汉字本身，还细化到声母、韵母、声调反馈。
+- **体验细节较完整：** 包含提示系统、拼音速查表、动画、音效、文字/图片分享。
+- **作品化程度较高：** 已上线、可访问、可展示，可作为项目案例。
+
 
 ## 视觉展示
 
@@ -208,16 +216,24 @@ npm run build
 npm run preview
 ```
 
-## 部署说明
-本仓库已按 GitHub Pages 方式配置：
-- 构建目录：`handle-wordle/dist`
-- 访问路径：`/handle/`
-- 工作流文件：`.github/workflows/deploy-pages.yml`
+## 部署与访问
+当前项目已通过 GitHub Pages 成功部署：
+- **线上地址：** [https://panzimon.github.io/handle/](https://panzimon.github.io/handle/)
+- **构建目录：** `handle-wordle/dist`
+- **访问路径：** `/handle/`
+- **工作流文件：** `.github/workflows/deploy-pages.yml`
 
-推送到 `main` 后，GitHub Actions 会自动构建并部署。若仓库 Pages 还没启用：
-1. 打开 GitHub 仓库 `Settings -> Pages`
-2. Source 选择 `GitHub Actions`
-3. 等待部署完成后访问 `https://panzimon.github.io/handle/`
+### 重新部署方式
+后续只要继续向 `main` 分支推送代码，GitHub Actions 就会自动完成构建与部署。
+
+### 本地预览
+如果要在本地查看生产构建效果，可执行：
+```bash
+cd handle-wordle
+npm run build
+npm run preview
+```
+
 
 ## 项目说明
 从项目表达角度看，比较值得关注的是这几件事：
@@ -226,13 +242,20 @@ npm run preview
 - 关键价值在于把输入、状态同步、反馈展示和分享流程串成闭环。
 - 在实现过程中借助了 AI 工具提升开发和排查效率，但核心交互逻辑仍然经过人工验证与收口。
 
-## 发布检查清单
-- [x] 补 1 段演示 GIF：`docs/demo.gif`
-- [x] 补 6 张关键状态截图：初始、猜词中、速查表、提示、成功、失败
-- [x] 补架构图：`docs/architecture.svg`
-- [ ] 推送部署配置到 `main`
-- [ ] 确认 GitHub Pages 使用 `GitHub Actions`
-- [ ] 部署成功后把在线地址改成正式可点击链接
+## 当前发布状态
+- [x] 已补充 1 段演示 GIF：`docs/demo.gif`
+- [x] 已补充 6 张关键状态截图：初始、猜词中、速查表、提示、成功、失败
+- [x] 已补充架构图：`docs/architecture.svg`
+- [x] 已推送部署配置到 `main`
+- [x] 已启用 GitHub Pages（GitHub Actions）
+- [x] 已提供正式在线地址并可访问：`https://panzimon.github.io/handle/`
+- [x] 已确认项目支持手机端访问与游玩
+
+## 后续可选优化
+- [ ] 补充 `LICENSE`（推荐 MIT）
+- [ ] 清理或归档部分开发过程文档，进一步提升仓库整洁度
+- [ ] 在 GitHub About 中补齐 Description、Website 与 Topics
+
 
 ## 仓库素材清单
 当前仓库已经具备一套比较完整的展示素材：
