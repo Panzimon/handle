@@ -293,7 +293,7 @@ export async function saveShareImage(
         
         iframe.contentDocument.body.appendChild(clone);
         // 触发 onload
-        iframe.onload();
+        resolve(null);
       }
     });
 
