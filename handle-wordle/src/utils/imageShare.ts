@@ -46,7 +46,6 @@ export function createShareImageElement(
   const container = document.createElement('div');
   container.style.cssText = `
     width: 368px;
-    height: 448px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 16px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -57,6 +56,7 @@ export function createShareImageElement(
     align-items: center;
     justify-content: center;
     position: relative;
+    padding: 20px;
   `;
 
   // 标题
@@ -298,38 +298,42 @@ export async function saveShareImage(
     });
 
     // 在 iframe 中截图
-    let canvas: HTMLCanvasElement | null = null;
-    if (iframe.contentDocument) {
-      const clonedElement = iframe.contentDocument.querySelector('#share-image-container');
-      if (clonedElement) {
-        // 确保 iframe 尺寸与元素一致
-        iframe.style.width = `${clonedElement.offsetWidth}px`;
-        iframe.style.height = `${clonedElement.offsetHeight}px`;
-        
-        canvas = await html2canvas(clonedElement, {
-          backgroundColor: null,
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          logging: false,
-          scrollX: 0,
-          scrollY: 0,
-          foreignObjectRendering: true,
-          width: clonedElement.offsetWidth,
-          height: clonedElement.offsetHeight,
-          x: 0,
-          y: 0
-        });
-      }
+  let canvas: HTMLCanvasElement | null = null;
+  if (iframe.contentDocument) {
+    // 直接获取 iframe body 的第一个子元素，因为我们只添加了一个元素
+    const clonedElement = iframe.contentDocument.body.firstChild as HTMLElement;
+    if (clonedElement) {
+      // 确保 iframe 尺寸与元素一致
+      const width = clonedElement.offsetWidth;
+      const height = clonedElement.offsetHeight;
+      
+      iframe.style.width = `${width}px`;
+      iframe.style.height = `${height}px`;
+      
+      canvas = await html2canvas(clonedElement, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        foreignObjectRendering: true,
+        width: width,
+        height: height,
+        x: 0,
+        y: 0
+      });
     }
+  }
 
     // 清理 iframe
     if (iframe.parentNode) {
       iframe.parentNode.removeChild(iframe);
     }
 
-    // 清理原始元素
-    if (element.parentNode) {
+    // 清理原始元素（仅清理通过 createShareImageElement 创建的元素，不影响预览元素）
+    if (element.parentNode && element.style.position === 'fixed' && element.style.top === '-9999px') {
       element.parentNode.removeChild(element);
     }
 

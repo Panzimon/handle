@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGame } from './useGame';
 import { Cell } from './Cell';
 import { getPinyin } from './pinyin';
@@ -32,7 +32,7 @@ function App() {
   const [showSadAnimation, setShowSadAnimation] = useState(false);
   const [showGuessAnimation, setShowGuessAnimation] = useState(false);
   const [guessAnimationRow, setGuessAnimationRow] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'error' | 'warning' | 'success' } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'error' | 'warning' | 'success'; key: number } | null>(null);
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
   const [isInputComposing, setIsInputComposing] = useState(false);
 
@@ -90,8 +90,16 @@ function App() {
 
   // 显示toast提示
   const showToast = (message: string, type: 'error' | 'warning' | 'success') => {
-    setToast({ message, type });
+    // 只有当消息不同时才更新，避免短时间内重复显示相同的 toast
+    if (!toast || toast.message !== message || toast.type !== type) {
+      setToast({ message, type, key: Date.now() });
+    }
   };
+
+  // 关闭toast提示
+  const closeToast = useCallback(() => {
+    setToast(null);
+  }, []);
 
   // 处理输入变化
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,6 +207,8 @@ function App() {
         } else {
           showToast('复制失败，请手动复制', 'error');
         }
+        // 清理预览并关闭模态框
+        setShowShareConfirm(false);
         cleanupSharePreview();
       });
     } else if (shareType === 'image') {
@@ -226,8 +236,9 @@ function App() {
         } else {
           showToast('保存图片失败，请重试', 'error');
         }
-        // 不要清理预览，让用户手动关闭模态框
-        // cleanupSharePreview();
+        // 清理预览并关闭模态框
+        setShowShareConfirm(false);
+        cleanupSharePreview();
       });
     } else {
       cleanupSharePreview();
@@ -238,13 +249,8 @@ function App() {
   const cancelShare = () => {
     // 直接关闭模态框
     setShowShareConfirm(false);
-    // 清理其他状态
-    if (previewRef.current) {
-      previewRef.current.innerHTML = '';
-    }
-    setShareType(null);
-    setSharePreview(null);
-    setPreviewElement(null);
+    // 清理预览元素
+    cleanupSharePreview();
   };
 
   // 清理预览资源
@@ -253,8 +259,12 @@ function App() {
     if (previewRef.current) {
       previewRef.current.innerHTML = '';
     }
-    // 不关闭模态框，让用户手动关闭
-    // setShowShareConfirm(false);
+    // 清理原始预览元素（如果存在）
+    const existingContainer = document.getElementById('share-image-container');
+    if (existingContainer && existingContainer.parentNode) {
+      existingContainer.parentNode.removeChild(existingContainer);
+    }
+    // 重置分享相关状态
     setShareType(null);
     setSharePreview(null);
     setPreviewElement(null);
@@ -411,7 +421,6 @@ function App() {
       clone.style.visibility = 'visible';
       // 确保克隆元素不受模态框 CSS 影响
       clone.style.width = '368px';
-      clone.style.height = '448px';
       clone.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
       clone.style.borderRadius = '16px';
       clone.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
@@ -421,6 +430,7 @@ function App() {
       clone.style.flexDirection = 'column';
       clone.style.alignItems = 'center';
       clone.style.justifyContent = 'center';
+      clone.style.padding = '20px';
       previewRef.current.appendChild(clone);
     }
   }, [previewElement]);
@@ -961,9 +971,10 @@ function App() {
         {/* Toast 提示 */}
         {toast && (
           <Toast
+            key={toast.key}
             message={toast.message}
             type={toast.type}
-            onClose={() => setToast(null)}
+            onClose={closeToast}
           />
         )}
       </main>

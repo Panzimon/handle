@@ -26,8 +26,8 @@ function createEmptyRow(): CellData[] {
 // 检查猜测结果
 export function checkGuess(guess: string, answer: string): CellData[] {
   const result: CellData[] = [];
-  const answerPinyins = answer.split('').map(getPinyin);
-  const guessPinyins = guess.split('').map(getPinyin);
+  const answerPinyins = answer.split('').map(char => getPinyin(char, answer));
+  const guessPinyins = guess.split('').map(char => getPinyin(char, guess));
 
   // 统计答案中每个组件的出现次数
   const charCount: Record<string, number> = {};

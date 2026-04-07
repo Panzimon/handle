@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+<defs>
+  <style>
+    .font-base { font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif; }
+  </style>
+  <filter id="sh">
+    <feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#00000018"/>
+  </filter>
+</defs>
+<rect width="1400" height="900" fill="#f8f9fa"/>
+<text x="700" y="28" dominant-baseline="hanging" text-anchor="middle"
+  class="font-base" font-size="26" font-weight="bold" fill="#282830"
+>Handle  —  Architecture Overview</text>
+<line x1="60" y1="68" x2="1340" y2="68" stroke="#d2d7e1" stroke-width="1"/>
+<defs><marker id="arr0" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#c0c8d8"/>
+  </marker></defs>
+<defs><marker id="arr1" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#c0c8d8"/>
+  </marker></defs>
+<defs><marker id="arr2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#c0c8d8"/>
+  </marker></defs>
+<rect x="40" y="70" width="310" height="790" rx="16"
+    fill="#e8f4fc" stroke="#7ab8d8" stroke-width="2" filter="url(#sh)"/>
+<text x="195" y="88" dominant-baseline="hanging" text-anchor="middle"
+    class="font-base" font-size="16" font-weight="bold" fill="#1e64a0"
+  >① Data Layer</text>
+<line x1="56" y1="118" x2="334" y2="118" stroke="#7ab8d8" stroke-width="1"/>
+<rect x="54" y="128" width="282" height="30" rx="7"
+      fill="white" stroke="#7ab8d8" stroke-width="1.5"/>
+<text x="64" y="137" dominant-baseline="hanging"
+      class="font-base" font-size="14" font-weight="bold" fill="#1a1a28"
+    >words.ts</text>
+<text x="64" y="162" dominant-baseline="hanging"
+      class="font-base" font-size="13" fill="#606878"
+    >成语词库</text>
+<rect x="54" y="191" width="282" height="30" rx="7"
+      fill="white" stroke="#7ab8d8" stroke-width="1.5"/>
+<text x="64" y="200" dominant-baseline="hanging"
+      class="font-base" font-size="14" font-weight="bold" fill="#1a1a28"
+    >pinyin.ts</text>
+<text x="64" y="225" dominant-baseline="hanging"
+      class="font-base" font-size="13" fill="#606878"
+    >拼音处理</text>
+<text x="72" y="242" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· 声母 / 韵母 / 声调</text>
+<rect x="54" y="271" width="282" height="30" rx="7"
+      fill="white" stroke="#7ab8d8" stroke-width="1.5"/>
+<text x="64" y="280" dominant-baseline="hanging"
+      class="font-base" font-size="14" font-weight="bold" fill="#1a1a28"
+    >types.ts</text>
+<text x="64" y="305" dominant-baseline="hanging"
+      class="font-base" font-size="13" fill="#606878"
+    >类型定义</text>
+<text x="72" y="322" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· CellData</text>
+<text x="72" y="339" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· GameState</text>
+<text x="72" y="356" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· HintUsage</text>
+<rect x="376" y="70" width="310" height="790" rx="16"
+    fill="#f0e8fc" stroke="#a07acc" stroke-width="2" filter="url(#sh)"/>
+<text x="531" y="88" dominant-baseline="hanging" text-anchor="middle"
+    class="font-base" font-size="16" font-weight="bold" fill="#5a32a0"
+  >② Core Logic</text>
+<line x1="392" y1="118" x2="670" y2="118" stroke="#a07acc" stroke-width="1"/>
+<rect x="390" y="128" width="282" height="30" rx="7"
+      fill="white" stroke="#a07acc" stroke-width="1.5"/>
+<text x="400" y="137" dominant-baseline="hanging"
+      class="font-base" font-size="14" font-weight="bold" fill="#1a1a28"
+    >useGame.ts</text>
+<text x="400" y="162" dominant-baseline="hanging"
+      class="font-base" font-size="13" fill="#606878"
+    >核心状态管理 (Hook)</text>
+<text x="408" y="179" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· grid 状态</text>
+<text x="408" y="196" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· currentInput</text>
+<text x="408" y="213" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· gameState（playing / won / lost）</text>
+<text x="408" y="230" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· Timer 计时器</text>
+<text x="408" y="247" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· 提示系统（HintUsage）</text>
+<text x="408" y="264" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· playAgain / changeWord</text>
+<rect x="712" y="70" width="310" height="790" rx="16"
+    fill="#e8f8ee" stroke="#5ab87a" stroke-width="2" filter="url(#sh)"/>
+<text x="867" y="88" dominant-baseline="hanging" text-anchor="middle"
+    class="font-base" font-size="16" font-weight="bold" fill="#1e7850"
+  >③ UI Components</text>
+<line x1="728" y1="118" x2="1006" y2="118" stroke="#5ab87a" stroke-width="1"/>
+<rect x="726" y="128" width="282" height="30" rx="7"
+      fill="white" stroke="#5ab87a" stroke-width="1.5"/>
+<text x="736" y="137" dominant-baseline="hanging"
+      class="font-base" font-size="14" font-weight="bold" fill="#1a1a28"
+    >App.tsx</text>
+<text x="736" y="162" dominant-baseline="hanging"
+      class="font-base" font-size="13" fill="#606878"
+    >页面主入口</text>
+<text x="744" y="179" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· 输入处理</text>
+<text x="744" y="196" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· 动画控制</text>
+<text x="744" y="213" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· 状态组织</text>
+<rect x="726" y="242" width="282" height="30" rx="7"
+      fill="white" stroke="#5ab87a" stroke-width="1.5"/>
+<text x="736" y="251" dominant-baseline="hanging"
+      class="font-base" font-size="14" font-weight="bold" fill="#1a1a28"
+    >Cell.tsx</text>
+<text x="736" y="276" dominant-baseline="hanging"
+      class="font-base" font-size="13" fill="#606878"
+    >单元格 + 拼音反馈</text>
+<rect x="726" y="305" width="282" height="30" rx="7"
+      fill="white" stroke="#5ab87a" stroke-width="1.5"/>
+<text x="736" y="314" dominant-baseline="hanging"
+      class="font-base" font-size="14" font-weight="bold" fill="#1a1a28"
+    >Keyboard.tsx</text>
+<text x="736" y="339" dominant-baseline="hanging"
+      class="font-base" font-size="13" fill="#606878"
+    >虚拟键盘</text>
+<rect x="726" y="368" width="282" height="30" rx="7"
+      fill="white" stroke="#5ab87a" stroke-width="1.5"/>
+<text x="736" y="377" dominant-baseline="hanging"
+      class="font-base" font-size="14" font-weight="bold" fill="#1a1a28"
+    >Toast.tsx</text>
+<text x="736" y="402" dominant-baseline="hanging"
+      class="font-base" font-size="13" fill="#606878"
+    >消息提示</text>
+<rect x="1048" y="70" width="310" height="790" rx="16"
+    fill="#fff3e0" stroke="#d09050" stroke-width="2" filter="url(#sh)"/>
+<text x="1203" y="88" dominant-baseline="hanging" text-anchor="middle"
+    class="font-base" font-size="16" font-weight="bold" fill="#904010"
+  >④ Utilities</text>
+<line x1="1064" y1="118" x2="1342" y2="118" stroke="#d09050" stroke-width="1"/>
+<rect x="1062" y="128" width="282" height="30" rx="7"
+      fill="white" stroke="#d09050" stroke-width="1.5"/>
+<text x="1072" y="137" dominant-baseline="hanging"
+      class="font-base" font-size="14" font-weight="bold" fill="#1a1a28"
+    >utils/share.ts</text>
+<text x="1072" y="162" dominant-baseline="hanging"
+      class="font-base" font-size="13" fill="#606878"
+    >文字分享</text>
+<text x="1080" y="179" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· 生成分享文本</text>
+<text x="1080" y="196" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· 复制到剪贴板</text>
+<rect x="1062" y="225" width="282" height="30" rx="7"
+      fill="white" stroke="#d09050" stroke-width="1.5"/>
+<text x="1072" y="234" dominant-baseline="hanging"
+      class="font-base" font-size="14" font-weight="bold" fill="#1a1a28"
+    >utils/imageShare.ts</text>
+<text x="1072" y="259" dominant-baseline="hanging"
+      class="font-base" font-size="13" fill="#606878"
+    >图片分享</text>
+<text x="1080" y="276" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· html-to-image</text>
+<text x="1080" y="293" dominant-baseline="hanging"
+        class="font-base" font-size="12" fill="#8a9298"
+      >· html2canvas</text>
+<line x1="350" y1="465" x2="374" y2="465"
+    stroke="#c0c8d8" stroke-width="3" marker-end="url(#arr0)"/>
+<line x1="686" y1="465" x2="710" y2="465"
+    stroke="#c0c8d8" stroke-width="3" marker-end="url(#arr1)"/>
+<line x1="1022" y1="465" x2="1046" y2="465"
+    stroke="#c0c8d8" stroke-width="3" marker-end="url(#arr2)"/>
+<text x="700" y="886" dominant-baseline="auto" text-anchor="middle"
+  class="font-base" font-size="12" fill="#a0a8b8"
+>Vite 构建  |  React 18  |  TypeScript  |  Jest 测试覆盖</text>
+</svg>

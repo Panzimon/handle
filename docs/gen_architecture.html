@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; background: #f8f9fa; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1400" height="860"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 1400, H = 860;
+
+// BG
+ctx.fillStyle = '#f8f9fa';
+ctx.fillRect(0, 0, W, H);
+
+// helpers
+function roundRect(x, y, w, h, r, fill, stroke) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
+}
+
+function arrow(x1, y1, x2, y2, color = '#aab') {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+  ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.stroke();
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const sz = 10;
+  for (const da of [0.45, -0.45]) {
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - sz * Math.cos(angle - da), y2 - sz * Math.sin(angle - da));
+    ctx.stroke();
+  }
+}
+
+function tc(txt, cx, y, font, color = '#323240') {
+  ctx.font = font; ctx.fillStyle = color;
+  const tw = ctx.measureText(txt).width;
+  ctx.fillText(txt, cx - tw / 2, y);
+}
+function tl(txt, x, y, font, color = '#3c4150') {
+  ctx.font = font; ctx.fillStyle = color;
+  ctx.fillText(txt, x, y);
+}
+
+// Title
+tc('Handle  —  Architecture Overview', W/2, 56, 'bold 28px "Microsoft YaHei", sans-serif', '#282830');
+ctx.strokeStyle = '#d2d7e1'; ctx.lineWidth = 1;
+ctx.beginPath(); ctx.moveTo(60, 72); ctx.lineTo(W-60, 72); ctx.stroke();
+
+const TOP = 90, LH = 680, LW = 270, GAP = 26;
+
+const layers = [
+  {
+    label: '① Data Layer',
+    bg: '#e8f4fc', border: '#96c8e6', lc: '#1e64a0',
+    items: [
+      { name: 'words.ts', desc: '成语词库', subs: null },
+      { name: 'pinyin.ts', desc: '拼音处理', subs: ['声母 / 韵母 / 声调'] },
+      { name: 'types.ts', desc: '类型定义', subs: ['CellData', 'GameState', 'HintUsage'] },
+    ]
+  },
+  {
+    label: '② Core Logic',
+    bg: '#f0e8fc', border: '#b08cdc', lc: '#5a32a0',
+    items: [
+      { name: 'useGame.ts', desc: '核心状态管理 (Hook)', subs: [
+        'grid 状态',
+        'currentInput',
+        'gameState (playing/won/lost)',
+        'Timer 计时器',
+        '提示系统 (HintUsage)',
+        'playAgain / changeWord',
+      ]},
+    ]
+  },
+  {
+    label: '③ UI Components',
+    bg: '#e8f8ee', border: '#78c896', lc: '#1e8250',
+    items: [
+      { name: 'App.tsx', desc: '页面主入口', subs: ['输入处理', '动画控制', '状态组织'] },
+      { name: 'Cell.tsx', desc: '单元格 + 拼音反馈', subs: null },
+      { name: 'Keyboard.tsx', desc: '虚拟键盘', subs: null },
+      { name: 'Toast.tsx', desc: '消息提示', subs: null },
+    ]
+  },
+  {
+    label: '④ Utilities',
+    bg: '#fff3e0', border: '#dca064', lc: '#a05a14',
+    items: [
+      { name: 'utils/share.ts', desc: '文字分享', subs: ['生成分享文本', '复制到剪贴板'] },
+      { name: 'utils/imageShare.ts', desc: '图片分享', subs: ['html-to-image', 'html2canvas'] },
+    ]
+  },
+];
+
+const layerX = [];
+
+layers.forEach((layer, i) => {
+  const lx = 40 + i * (LW + GAP);
+  layerX.push(lx);
+
+  roundRect(lx, TOP, LW, LH, 16, layer.bg, layer.border);
+  tc(layer.label, lx + LW/2, TOP + 36, `bold 17px "Microsoft YaHei", sans-serif`, layer.lc);
+  ctx.strokeStyle = layer.border; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(lx+16, TOP+50); ctx.lineTo(lx+LW-16, TOP+50); ctx.stroke();
+
+  let iy = TOP + 68;
+  for (const item of layer.items) {
+    roundRect(lx+12, iy, LW-24, 26, 7, '#fff', layer.border);
+    tl(`  ${item.name}`, lx+14, iy+18, `bold 14px "Microsoft YaHei", sans-serif`, '#282830');
+    iy += 30;
+    tl(`    ${item.desc}`, lx+14, iy, `14px "Microsoft YaHei", sans-serif`, '#646878');
+    iy += 18;
+    if (item.subs) {
+      for (const s of item.subs) {
+        tl(`        · ${s}`, lx+14, iy, `12px "Microsoft YaHei", sans-serif`, '#8a9090');
+        iy += 16;
+      }
+    }
+    iy += 10;
+  }
+});
+
+// Arrows
+for (let i = 0; i < layers.length - 1; i++) {
+  const x1 = layerX[i] + LW;
+  const x2 = layerX[i+1];
+  const my = TOP + LH/2;
+  arrow(x1, my, x2, my, '#b0b8cc');
+}
+
+// Footer
+tc('Vite 构建  |  React 18  |  TypeScript  |  Jest 测试覆盖', W/2, H - 22, `12px "Microsoft YaHei", sans-serif`, '#9a9fb0');
+
+// Download
+const a = document.createElement('a');
+a.download = 'architecture.png';
+a.href = canvas.toDataURL('image/png');
+a.click();
+</script>
+</body>
+</html>

@@ -1,23 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 interface ToastProps {
   message: string;
   type: 'error' | 'warning' | 'success';
-  duration?: number;
   onClose: () => void;
 }
 
-const Toast: React.FC<ToastProps> = ({ message, type, duration = 3000, onClose }) => {
-  const [isVisible, setIsVisible] = useState(true);
+const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
+  // 固定显示时间为 5 秒
+  const duration = 5000;
 
   useEffect(() => {
+    // 组件挂载时设置定时器
     const timer = setTimeout(() => {
-      setIsVisible(false);
-      setTimeout(onClose, 300);
+      onClose();
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [duration, onClose]);
+  }, [onClose, duration]); // 只依赖 onClose 和 duration
 
   const getTypeStyles = () => {
     if (type === 'error') {
@@ -51,9 +51,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, duration = 3000, onClose }
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 max-w-xs w-full border rounded-lg shadow-lg transform transition-all duration-300 ease-in-out ${
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-[-20px] opacity-0'
-      }`}
+      className="fixed top-4 right-4 z-50 max-w-xs w-full border rounded-lg shadow-lg transform transition-all duration-300 ease-in-out translate-y-0 opacity-100"
       style={{
         backgroundColor: styles.backgroundColor,
         borderColor: styles.borderColor,
@@ -71,10 +69,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, duration = 3000, onClose }
           </p>
         </div>
         <button
-          onClick={() => {
-            setIsVisible(false);
-            setTimeout(onClose, 300);
-          }}
+          onClick={onClose}
           className="text-sm flex-shrink-0 hover:underline"
           style={{ color: styles.textColor }}
         >
